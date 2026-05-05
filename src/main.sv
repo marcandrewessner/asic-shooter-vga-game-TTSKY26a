@@ -17,38 +17,64 @@ module maw_main
   output logic [2:0] rgb_o
 );
 
+  //////////////////////////////////////////////
+  // prepare the btn signals (assigned below) //
+  //////////////////////////////////////////////
+  logic btn_up_sync, btn_up_held_edge_rising, btn_up_held_edge_falling;
+  logic btn_down_sync, btn_down_held_edge_rising, btn_down_held_edge_falling;
+  logic btn_left_sync, btn_left_held_edge_rising, btn_left_held_edge_falling;
+  logic btn_right_sync, btn_right_held_edge_rising, btn_right_held_edge_falling;
+  logic btn_action_sync, btn_action_held_edge_rising, btn_action_held_edge_falling;
+
+  //////////////////////////////////////////////
+  // prepare the logic and renderer signals //
+  //////////////////////////////////////////////
+  // Renderer //
   logic end_of_frame;
- 
-  // Crosshair
-  game_pos_t crosshair_pos;
   pix_pos_t crosshair_pos_pix;
-  assign crosshair_pos_pix = game2pix_pos_transformation(crosshair_pos);
-
-  // Enemy
-  game_pos_t enemy_pos;
   pix_pos_t enemy_pos_pix;
-  assign enemy_pos_pix = game2pix_pos_transformation(enemy_pos);
+  logic draw_ghost;
+  logic draw_crosshair;
+  logic draw_start_text;
+  // Logic //
+  localparam int N_SHOTS = 10;
+  localparam game_pos_t CROSSHAIR_RESET_POS = '{x:150, y:100};
+  logic crosshair_controller_reset, crosshair_controller_lock;
+  game_state_e game_state;
+  game_pos_t crosshair_pos;
+  game_pos_t enemy_pos;
+ 
+  //////////////////////////////////////////////
+  // instantiate game logic & rendering //
+  //////////////////////////////////////////////
 
-  render_engine i_render_engine (
-    .clk_i(clk_i),
-    .rst_ni(rst_ni),
-    .end_of_frame_o(end_of_frame),
-    .hsync_o(hsync_o),
-    .vsync_o(vsync_o),
-    .rgb_o(rgb_o),
-    .cross_pos_i(crosshair_pos_pix),
-    .ghost_pos_i(enemy_pos_pix)
+  game_state_fsm #(
+    .N_SHOTS
+  ) i_game_state_fsm (
+    .clk_i, .rst_ni,
+    .end_of_frame_i(end_of_frame),
+    .btn_action_edge_held_i(btn_action_held_edge_falling),
+    .missed_i(),
+    .hit_i(),
+    .game_state_o(game_state),
+    .used_shots_o(),
+    .score_shots_o()
   );
 
-  crosshair_control i_crosshair_control (
+  crosshair_control #(
+    .RESET_POSITION(CROSSHAIR_RESET_POS)
+  ) i_crosshair_control (
     .clk_i(clk_i),
     .rst_ni(rst_ni),
     .clk_virt_i(end_of_frame),
-    .btn_up_i(btn_up_i),
-    .btn_down_i(btn_down_i),
-    .btn_right_i(btn_right_i),
-    .btn_left_i(btn_left_i),
-    .btn_action_i(btn_action_i),
+    // Button inputs
+    .btn_up_i(btn_up_sync),
+    .btn_down_i(btn_down_sync),
+    .btn_right_i(btn_right_sync),
+    .btn_left_i(btn_left_sync),
+    // Control inputs
+    .pos_reset(crosshair_controller_reset),
+    .pos_lock(crosshair_controller_lock),
     .pos_o(crosshair_pos)
   );
 
@@ -61,5 +87,141 @@ module maw_main
     .rtl_i(1),
     .enemy_position_o(enemy_pos)
   );
+
+  render_engine i_render_engine (
+    .clk_i(clk_i),
+    .rst_ni(rst_ni),
+    .end_of_frame_o(end_of_frame),
+    .hsync_o(hsync_o),
+    .vsync_o(vsync_o),
+    .rgb_o(rgb_o),
+    // let the renderer know what to render
+    .draw_ghost_i(draw_ghost),
+    .draw_crosshair_i(draw_crosshair),
+    .draw_start_text_i(draw_start_text),
+    // let the renderer know where to render
+    .cross_pos_i(crosshair_pos_pix),
+    .ghost_pos_i(enemy_pos_pix)
+  );
+
+  //////////////////////////////////////////////
+  // populate game logic //
+  //////////////////////////////////////////////
+  always_comb begin : main_game_logic 
+    // Set the crosshair control state
+    crosshair_controller_lock = ~(
+      game_state == GAME_STATE_SHOOTING  ||
+      game_state == GAME_STATE_HIT       ||
+      game_state == GAME_STATE_MISS
+    );
+    crosshair_controller_reset = (
+      game_state == GAME_STATE_RESET         ||
+      game_state == GAME_STATE_START_SCREEN
+    );
+
+    // Decide what to draw on screen
+    draw_ghost      = 1'b1;
+    draw_crosshair  = 1'b1;
+    draw_start_text = (game_state == GAME_STATE_START_SCREEN);
+
+    // Game pos to screen pos
+    crosshair_pos_pix = game2pix_pos_transformation(crosshair_pos);
+    enemy_pos_pix     = game2pix_pos_transformation(enemy_pos);
+  end
+
+
+
+
+
+
+  //////////////////////////////////////////////
+  // process and assign the btn signals //
+  //////////////////////////////////////////////
+  // button up
+  btn_cdc i_btn_cdc_b_up (
+    .clk_i, .rst_ni,
+    .btn_i(btn_up_i), .btn_o(btn_up_sync)
+  );
+  btn_edge_detector #(
+    .EDGE("RISING")
+  ) i_btn_edge_b_up_rising (
+    .clk_i, .rst_ni, .clk_virt_i(end_of_frame),
+    .signal_i(btn_up_sync), .edge_o(btn_up_held_edge_rising)
+  );
+  btn_edge_detector #(
+    .EDGE("FALLING")
+  ) i_btn_edge_b_up_falling (
+    .clk_i, .rst_ni, .clk_virt_i(end_of_frame),
+    .signal_i(btn_up_sync), .edge_o(btn_up_held_edge_falling)
+  );
+  // button down
+  btn_cdc i_btn_cdc_b_down (
+    .clk_i, .rst_ni,
+    .btn_i(btn_down_i), .btn_o(btn_down_sync)
+  );
+  btn_edge_detector #(
+    .EDGE("RISING")
+  ) i_btn_edge_b_down_rising (
+    .clk_i, .rst_ni, .clk_virt_i(end_of_frame),
+    .signal_i(btn_down_sync), .edge_o(btn_down_held_edge_rising)
+  );
+  btn_edge_detector #(
+    .EDGE("FALLING")
+  ) i_btn_edge_b_down_falling (
+    .clk_i, .rst_ni, .clk_virt_i(end_of_frame),
+    .signal_i(btn_down_sync), .edge_o(btn_down_held_edge_falling)
+  );
+  // button left
+  btn_cdc i_btn_cdc_b_left (
+    .clk_i, .rst_ni,
+    .btn_i(btn_left_i), .btn_o(btn_left_sync)
+  );
+  btn_edge_detector #(
+    .EDGE("RISING")
+  ) i_btn_edge_b_left_rising (
+    .clk_i, .rst_ni, .clk_virt_i(end_of_frame),
+    .signal_i(btn_left_sync), .edge_o(btn_left_held_edge_rising)
+  );
+  btn_edge_detector #(
+    .EDGE("FALLING")
+  ) i_btn_edge_b_left_falling (
+    .clk_i, .rst_ni, .clk_virt_i(end_of_frame),
+    .signal_i(btn_left_sync), .edge_o(btn_left_held_edge_falling)
+  );
+  // button right
+  btn_cdc i_btn_cdc_b_right (
+    .clk_i, .rst_ni,
+    .btn_i(btn_right_i), .btn_o(btn_right_sync)
+  );
+  btn_edge_detector #(
+    .EDGE("RISING")
+  ) i_btn_edge_b_right_rising (
+    .clk_i, .rst_ni, .clk_virt_i(end_of_frame),
+    .signal_i(btn_right_sync), .edge_o(btn_right_held_edge_rising)
+  );
+  btn_edge_detector #(
+    .EDGE("FALLING")
+  ) i_btn_edge_b_right_falling (
+    .clk_i, .rst_ni, .clk_virt_i(end_of_frame),
+    .signal_i(btn_right_sync), .edge_o(btn_right_held_edge_falling)
+  );
+  // button action
+  btn_cdc i_btn_cdc_b_action (
+    .clk_i, .rst_ni,
+    .btn_i(btn_action_i), .btn_o(btn_action_sync)
+  );
+  btn_edge_detector #(
+    .EDGE("RISING")
+  ) i_btn_edge_b_action_rising (
+    .clk_i, .rst_ni, .clk_virt_i(end_of_frame),
+    .signal_i(btn_action_sync), .edge_o(btn_action_held_edge_rising)
+  );
+  btn_edge_detector #(
+    .EDGE("FALLING")
+  ) i_btn_edge_b_action_falling (
+    .clk_i, .rst_ni, .clk_virt_i(end_of_frame),
+    .signal_i(btn_action_sync), .edge_o(btn_action_held_edge_falling)
+  );
+
 
 endmodule

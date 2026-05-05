@@ -32,4 +32,16 @@ package game_logic_pkg;
     return pix_pos_output;
   endfunction
 
+  // Define the states for the FSM of the game
+  // 3 bits allows for 8 states
+  typedef enum logic [2:0] { 
+    GAME_STATE_RESET,          // Start of the RESET (direct jump to START_SCREEN)
+    GAME_STATE_START_SCREEN,   // Start screen
+    GAME_STATE_SHOOTING,       // Chasing the enemies
+    GAME_STATE_HIT,            // We just hit the ghost (play die animation)
+    GAME_STATE_MISS,           // we just missed
+    GAME_STATE_LOST,      // we lost the game
+    GAME_STATE_WON       // we won the game
+  } game_state_e;
+
 endpackage

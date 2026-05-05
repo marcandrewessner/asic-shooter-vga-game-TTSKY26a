@@ -22,8 +22,10 @@ module render_engine
     output logic vsync_o,
     output rgb_t rgb_o,
 
-    // Now we feed in the game state
+    input logic draw_start_text_i,
+    input logic draw_crosshair_i,
     input pix_pos_t cross_pos_i,
+    input logic draw_ghost_i,
     input pix_pos_t ghost_pos_i
 );
 
@@ -39,7 +41,9 @@ module render_engine
       .vsync_o          (vsync_o)
   );
 
-  // ==== CROSSHAIR ======
+  //////////////////////////////////////////////
+  // crosshair sprite //
+  //////////////////////////////////////////////
   argb_t         cross_color;
 
   sprite_input_t cross_input;
@@ -56,7 +60,9 @@ module render_engine
       .sprite_output(cross_output)
   );
 
-  // ====== Render the Ghost ========
+  //////////////////////////////////////////////
+  // ghost sprite //
+  //////////////////////////////////////////////
   argb_t         ghost_color;
   sprite_input_t ghost_input;
   assign ghost_input.center_pix = ghost_pos_i;
@@ -72,16 +78,45 @@ module render_engine
       .sprite_output(ghost_output)
   );
 
-  // ====== NOW RENDER LAYERED ======
-  logic ghost_active_n;
-  logic cross_active_n;
-  assign ghost_active_n = ghost_color[3];
-  assign cross_active_n = cross_color[3];
+  //////////////////////////////////////////////
+  // start text sprite //
+  //////////////////////////////////////////////
+  argb_t         start_txt_color;
+  sprite_input_t start_txt_input;
+  assign start_txt_input.center_pix = '{
+    x: 10'(SCREEN_WIDTH/2),
+    y: 10'(SCREEN_HEIGHT/2)
+  };
+  assign start_txt_input.vga_pos    = vga_pos;
+
+  sprite_output_t start_txt_output;
+  assign start_txt_color = start_txt_output.color;
+
+  start_text_graphic i_start_text_graphic (
+    .clk_i        (clk_i),
+    .rst_ni       (rst_ni),
+    .sprite_input (start_txt_input),
+    .sprite_output(start_txt_output)
+  );
+
+
+  //////////////////////////////////////////////
+  // draw the sprites layered //
+  //////////////////////////////////////////////
+  logic ghost_active;
+  logic cross_active;
+  logic start_txt_active;
+
+  assign start_txt_active = ~start_txt_color[3] & draw_start_text_i;
+  assign ghost_active     = ~ghost_color[3]     & draw_ghost_i;
+  assign cross_active     = ~cross_color[3]     & draw_crosshair_i;
 
   always_comb begin
-    rgb_o = 3'(0);
-    if (!cross_active_n) rgb_o = cross_color[2:0];
-    else if (!ghost_active_n) rgb_o = ghost_color[2:0];
+    rgb_o = 3'b000;
+    // Layers are built from top to bottom (first is top)!
+    if      (start_txt_active) rgb_o = start_txt_color[2:0];
+    else if (cross_active)     rgb_o = cross_color[2:0];
+    else if (ghost_active)     rgb_o = ghost_color[2:0];
   end
 
 endmodule

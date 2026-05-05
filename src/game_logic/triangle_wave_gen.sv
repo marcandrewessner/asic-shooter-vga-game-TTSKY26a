@@ -1,29 +1,32 @@
 
 `include "ff_macros.svh"
 
+// This creates a waveform generator
+// it counts up to the top and then down
+// note that the counter top is the amplitude,
+// higher amplitude is slower
+
 module triangle_wave_gen
   import game_logic_pkg::*;
 #(
-  parameter game_coord_t QUARTER_WAVE_PERIOD
 )
 (
   input logic clk_i,
   input logic rst_ni,
   input logic clk_virt_i,
 
+  input game_coord_t counter_top,
+
   output game_coord_t wave_o,
   output logic is_negative_o
 );
-
-  // Note that we cycle through 4 quarters up down down up
-  localparam game_coord_t COUNTER_TOP = QUARTER_WAVE_PERIOD;
 
   logic [1:0] phase_d, phase_q;
   game_coord_t wave_cnt_d, wave_cnt_q;
 
   always_comb begin
-    wave_cnt_d = (wave_cnt_q==COUNTER_TOP) ? 0 : wave_cnt_q+1;
-    phase_d = phase_q + (wave_cnt_q==COUNTER_TOP);
+    wave_cnt_d = (wave_cnt_q>=counter_top) ? 0 : wave_cnt_q+1;
+    phase_d = phase_q + (wave_cnt_q==counter_top);
   end
 
   `FFAR_EN(clk_i, rst_ni, 0, phase_q, phase_d, clk_virt_i);
@@ -35,7 +38,7 @@ module triangle_wave_gen
     is_running_down = phase_q==1 || phase_q==3;
     
     if(is_running_down)
-      wave_o = COUNTER_TOP - wave_cnt_q;
+      wave_o = counter_top - wave_cnt_q;
     else
       wave_o = wave_cnt_q;
   end

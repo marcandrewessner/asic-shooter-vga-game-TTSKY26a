@@ -19,7 +19,7 @@ module enemy_movement
 );
 
   localparam game_coord_t ENEMY_Y = 220;
-  localparam game_coord_t MOVEMENT_SPEED = 0;
+  localparam game_coord_t MOVEMENT_SPEED = 3;
 
   game_pos_t pos_d, pos_q;
 
@@ -35,12 +35,13 @@ module enemy_movement
   `FFAR_EN(clk_i, rst_ni, rst_position_i, pos_q, pos_d, clk_virt_i);
 
   // Initiatae the wave form generators
-  triangle_wave_gen #(
-    .QUARTER_WAVE_PERIOD(100)
-  ) i_triangle_wave_gen (
+  triangle_wave_gen i_triangle_wave_gen (
     .clk_i(clk_i),
     .rst_ni(rst_ni),
     .clk_virt_i(clk_virt_i),
+
+    .counter_top(30),
+
     .wave_o(wave1_val),
     .is_negative_o(wave1_is_negative)
   );
