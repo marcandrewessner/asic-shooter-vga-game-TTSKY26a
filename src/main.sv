@@ -51,6 +51,8 @@ module maw_main
   
   logic shot_hit;
   logic shot_miss;
+
+  logic [15:0] random_halfword;
  
   //////////////////////////////////////////////
   // instantiate game logic & rendering //
@@ -115,6 +117,11 @@ module maw_main
     // pass in the history for ui
     .shots_used_i(shots_used_history),
     .shots_hit_i (shots_hit_history)
+  );
+
+  prng_lfsr16 #(
+    .clk_i, .rst_ni,
+    rnd_o ( random_halfword )
   );
 
   //////////////////////////////////////////////
