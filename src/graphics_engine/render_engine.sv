@@ -111,12 +111,12 @@ module render_engine
   //////////////////////////////////////////////
   argb_t shots_ui_display_color;
   localparam pix_pos_t left_center_pos = '{
-    x: 'd200,
-    y: 'd300
+    x: 'd350,
+    y: 'd450
   };
 
   shot_ui_display #(
-    .N_SHOTS
+    .N_SHOTS(N_SHOTS)
   ) i_shot_ui_display (
     .clk_i, .rst_ni,
     .left_center_pos ( left_center_pos),

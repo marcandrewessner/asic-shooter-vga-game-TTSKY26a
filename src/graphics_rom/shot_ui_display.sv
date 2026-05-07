@@ -8,8 +8,8 @@ module shot_ui_display import graphics_engine_pkg::*; #(
   // Define appearance
   parameter pix_coord_t ITEM_CENTER_DISTANCE = 'd30
 ) (
-  logic clk_i,
-  logic rst_ni,
+  input logic clk_i,
+  input logic rst_ni,
 
   input pix_pos_t left_center_pos,
   input pix_pos_t vga_pos,

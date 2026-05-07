@@ -57,7 +57,7 @@ module maw_main
   //////////////////////////////////////////////
 
   game_state_fsm #(
-    .N_SHOTS
+    .N_SHOTS(N_SHOTS)
   ) i_game_state_fsm (
     .clk_i, .rst_ni,
     .end_of_frame_i         ( end_of_frame ),
@@ -97,7 +97,7 @@ module maw_main
   );
 
   render_engine #(
-    .N_SHOTS
+    .N_SHOTS(N_SHOTS)
   ) i_render_engine (
     .clk_i(clk_i),
     .rst_ni(rst_ni),

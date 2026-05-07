@@ -6,7 +6,7 @@
 # the --create-user-config does not incorporate any includes, thus the macro
 # is not included.
 
-set -euo pipefail
+set -eo pipefail
 
 if [ -z "$IN_NIX_SHELL" ]; then
     echo "Error: you need to be in the project's nix-shell. Run 'nix-shell' first." >&2
