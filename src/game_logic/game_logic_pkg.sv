@@ -32,12 +32,16 @@ package game_logic_pkg;
     return pix_pos_output;
   endfunction
 
-  // Check if point in box, with the box described by center, width and height
+  // Check if point in box, with the box described by center, width and height.
+  // Uses signed arithmetic to avoid unsigned underflow near the screen edges.
   function logic point_in_box(input game_pos_t point, input game_pos_t box_center, input game_pos_t box_dimensions);
-    return (
-      box_center.x-(box_dimensions.x/2) < point.x && point.x < box_center.x+(box_dimensions.x/2) &&
-      box_center.y-(box_dimensions.y/2) < point.y && point.y < box_center.y+(box_dimensions.y/2)
-    );
+    logic signed [10:0] dx, dy, half_w, half_h;
+    half_w = $signed({1'b0, box_dimensions.x}) >>> 1;
+    half_h = $signed({1'b0, box_dimensions.y}) >>> 1;
+    dx     = $signed({1'b0, box_center.x}) - $signed({1'b0, point.x});
+    dy     = $signed({1'b0, box_center.y}) - $signed({1'b0, point.y});
+    return (dx > -half_w) && (dx < half_w) &&
+           (dy > -half_h) && (dy < half_h);
   endfunction
 
   // Define the states for the FSM of the game

@@ -36,6 +36,11 @@ module maw_main
   logic draw_ghost;
   logic draw_crosshair;
   logic draw_start_text;
+  logic draw_hit;
+  logic draw_miss;
+  logic draw_won;
+  logic draw_lost;
+  logic enemy_rerandomize;
   // Logic //
   localparam int N_SHOTS = 10;
   game_state_e game_state;
@@ -52,7 +57,8 @@ module maw_main
   logic shot_hit;
   logic shot_miss;
 
-  logic [15:0] random_halfword;
+  logic [15:0] rnd_0;
+  logic [15:0] rnd_1;
  
   //////////////////////////////////////////////
   // instantiate game logic & rendering //
@@ -95,33 +101,46 @@ module maw_main
     .clk_virt_i(end_of_frame),
     .rst_position_i(ENEMY_RST_POS),
     .rtl_i(1),
+    .rnd_0_i(rnd_0),
+    .rnd_1_i(rnd_1),
+    .rerandomize_i(enemy_rerandomize),
     .enemy_position_o(enemy_pos)
   );
 
   render_engine #(
     .N_SHOTS(N_SHOTS)
   ) i_render_engine (
-    .clk_i(clk_i),
-    .rst_ni(rst_ni),
-    .end_of_frame_o(end_of_frame),
-    .hsync_o(hsync_o),
-    .vsync_o(vsync_o),
-    .rgb_o(rgb_o),
+    .clk_i, .rst_ni,
+    .end_of_frame_o ( end_of_frame ),
+    .hsync_o        ( hsync_o ),
+    .vsync_o        ( vsync_o ),
+    .rgb_o          ( rgb_o ),
     // let the renderer know what to render
-    .draw_ghost_i(draw_ghost),
-    .draw_crosshair_i(draw_crosshair),
-    .draw_start_text_i(draw_start_text),
+    .draw_ghost_i      ( draw_ghost ),
+    .draw_crosshair_i  ( draw_crosshair ),
+    .draw_start_text_i ( draw_start_text ),
+    .draw_hit_i        ( draw_hit ),
+    .draw_miss_i       ( draw_miss ),
+    .draw_won_i        ( draw_won ),
+    .draw_lost_i       ( draw_lost ),
     // let the renderer know where to render
-    .cross_pos_i(crosshair_pos_pix),
-    .ghost_pos_i(enemy_pos_pix),
+    .cross_pos_i ( crosshair_pos_pix ),
+    .ghost_pos_i ( enemy_pos_pix ),
     // pass in the history for ui
-    .shots_used_i(shots_used_history),
-    .shots_hit_i (shots_hit_history)
+    .shots_used_i ( shots_used_history ),
+    .shots_hit_i  ( shots_hit_history )
   );
 
-  prng_lfsr16 #(
+  //////////////////////////////////////////////
+  // random numbers //
+  //////////////////////////////////////////////
+  prng_lfsr16 #(.SEED(16'hACE1)) i_prng_lfsr16_0 (
     .clk_i, .rst_ni,
-    rnd_o ( random_halfword )
+    .rnd_o ( rnd_0 )
+  );
+  prng_lfsr16 #(.SEED(16'hBEEF)) i_prng_lfsr16_1 (
+    .clk_i, .rst_ni,
+    .rnd_o ( rnd_1 )
   );
 
   //////////////////////////////////////////////
@@ -149,11 +168,16 @@ module maw_main
     // Calculate hit or miss
     shot_hit  = btn_action_held_edge_rising & crosshair_on_enemy;
     shot_miss = btn_action_held_edge_rising & ~crosshair_on_enemy;
+    enemy_rerandomize = (game_state == GAME_STATE_HIT) | (game_state == GAME_STATE_MISS);
 
     // Decide what to draw on screen
     draw_ghost      = 1'b1;
     draw_crosshair  = 1'b1;
     draw_start_text = (game_state == GAME_STATE_START_SCREEN);
+    draw_hit        = (game_state == GAME_STATE_HIT || game_state == GAME_STATE_HIT_DELAY);
+    draw_miss       = (game_state == GAME_STATE_MISS || game_state == GAME_STATE_MISS_DELAY);
+    draw_won        = (game_state == GAME_STATE_WON);
+    draw_lost       = (game_state == GAME_STATE_LOST);
 
     // Game pos to screen pos
     crosshair_pos_pix = game2pix_pos_transformation(crosshair_pos);

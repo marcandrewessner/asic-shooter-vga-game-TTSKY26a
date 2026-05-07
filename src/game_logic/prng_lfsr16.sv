@@ -1,5 +1,7 @@
 
-module prng_lfsr16 (
+module prng_lfsr16 #(
+  parameter logic [15:0] SEED = 16'hACE1
+) (
     input  logic clk_i,
     input  logic rst_ni,
     output logic [15:0] rnd_o
@@ -13,7 +15,7 @@ module prng_lfsr16 (
 
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni)
-      rnd <= 16'hACE1;   // nonzero seed
+      rnd <= SEED;   // nonzero seed
     else
       rnd <= {rnd[14:0], feedback};
   end

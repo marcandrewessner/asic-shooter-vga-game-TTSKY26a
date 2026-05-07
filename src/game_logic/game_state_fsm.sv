@@ -9,7 +9,9 @@ module game_state_fsm import game_logic_pkg::*; #(
   // Define how many shots can be retried
   parameter int N_SHOTS = 10,
   parameter logic [7:0] DELAY_FRAMES_HIT  = 100,
-  parameter logic [7:0] DELAY_FRAMES_MISS = 100
+  parameter logic [7:0] DELAY_FRAMES_MISS = 100,
+  // Ceiling of 70% of N_SHOTS — minimum hits to win
+  localparam int WIN_THRESHOLD = (7 * N_SHOTS + 9) / 10
 ) (
   input clk_i,
   input rst_ni,
@@ -47,8 +49,8 @@ module game_state_fsm import game_logic_pkg::*; #(
   logic [N_SHOTS-1:0] used_shots_d, used_shots_q;
   logic [N_SHOTS-1:0] score_shots_d, score_shots_q;
 
-  `FFAR(clk_i, rst_ni, used_shots_q, used_shots_d, '0);
-  `FFAR(clk_i, rst_ni, score_shots_q, score_shots_d, '0);
+  `FFAR_EN(clk_i, rst_ni, '0, used_shots_q,  used_shots_d,  end_of_frame_i);
+  `FFAR_EN(clk_i, rst_ni, '0, score_shots_q, score_shots_d, end_of_frame_i);
 
   assign used_shots_o  = used_shots_q;
   assign score_shots_o = score_shots_q;
@@ -79,8 +81,11 @@ module game_state_fsm import game_logic_pkg::*; #(
       end
       GAME_STATE_SHOOTING: begin
         if (&used_shots_q) begin
-          // All shots are used return out
-        end 
+          if ($countones(score_shots_q) >= WIN_THRESHOLD)
+            game_state_d = GAME_STATE_WON;
+          else
+            game_state_d = GAME_STATE_LOST;
+        end
         else if (hit_i)    game_state_d = GAME_STATE_HIT;
         else if (missed_i) game_state_d = GAME_STATE_MISS;
       end
@@ -111,6 +116,20 @@ module game_state_fsm import game_logic_pkg::*; #(
         end else begin
           game_state_d    = GAME_STATE_MISS_DELAY; 
           frame_counter_d = frame_counter_d+1;
+        end
+      end
+      GAME_STATE_WON: begin
+        if (btn_action_edge_held_i) begin
+          game_state_d  = GAME_STATE_START_SCREEN;
+          used_shots_d  = '0;
+          score_shots_d = '0;
+        end
+      end
+      GAME_STATE_LOST: begin
+        if (btn_action_edge_held_i) begin
+          game_state_d  = GAME_STATE_START_SCREEN;
+          used_shots_d  = '0;
+          score_shots_d = '0;
         end
       end
       default: ;
