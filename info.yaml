@@ -17,14 +17,18 @@ project:
   # Source files must be in ./src and you must list each source file separately, one per line.
   # Don't forget to also update `PROJECT_SOURCES` in test/Makefile.
   source_files:
-    - "project.sv"
     - "graphics_engine/graphics_engine_pkg.sv"
     - "graphics_rom/graphics_rom_pkg.sv"
+    - "game_logic/game_logic_pkg.sv"
     - "graphics_rom/ghost_sprite.sv"
     - "graphics_rom/ghost_sprite_generated.sv"
     - "graphics_rom/crosshair_sprite.sv"
     - "graphics_engine/render_engine.sv"
     - "graphics_engine/vgatiming.sv"
+    - "game_logic/crosshair_control.sv"
+    - "game_logic/enemy_movement.sv"
+    - "game_logic/triangle_wave_gen.sv"
+    - "project.sv"
     - "main.sv"
 
 # The pinout of your project. Leave unused pins blank. DO NOT delete or add any pins.

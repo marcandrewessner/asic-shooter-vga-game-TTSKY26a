@@ -35,6 +35,7 @@
 
   "//": "MAW: Activate SLANG => Systemverilog Package support",
   "USE_SLANG": true,
+  "VERILOG_INCLUDE_DIRS": ["dir::macros"],
 
   "//": "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",
   "//": "!!! DO NOT CHANGE ANYTHING BELOW THIS POINT !!!",
