@@ -38,11 +38,19 @@ module maw_main
   logic draw_start_text;
   // Logic //
   localparam int N_SHOTS = 10;
+  game_state_e game_state;
+  logic [N_SHOTS-1:0] shots_used_history;
+  logic [N_SHOTS-1:0] shots_hit_history;
+
   localparam game_pos_t CROSSHAIR_RESET_POS = '{x:150, y:100};
   logic crosshair_controller_reset, crosshair_controller_lock;
-  game_state_e game_state;
   game_pos_t crosshair_pos;
+  
   game_pos_t enemy_pos;
+  logic crosshair_on_enemy;
+  
+  logic shot_hit;
+  logic shot_miss;
  
   //////////////////////////////////////////////
   // instantiate game logic & rendering //
@@ -52,13 +60,13 @@ module maw_main
     .N_SHOTS
   ) i_game_state_fsm (
     .clk_i, .rst_ni,
-    .end_of_frame_i(end_of_frame),
-    .btn_action_edge_held_i(btn_action_held_edge_falling),
-    .missed_i(),
-    .hit_i(),
-    .game_state_o(game_state),
-    .used_shots_o(),
-    .score_shots_o()
+    .end_of_frame_i         ( end_of_frame ),
+    .btn_action_edge_held_i ( btn_action_held_edge_falling ),
+    .missed_i               ( shot_miss ),
+    .hit_i                  ( shot_hit ),
+    .game_state_o           ( game_state ),
+    .used_shots_o           ( shots_used_history ),
+    .score_shots_o          ( shots_hit_history )
   );
 
   crosshair_control #(
@@ -88,7 +96,9 @@ module maw_main
     .enemy_position_o(enemy_pos)
   );
 
-  render_engine i_render_engine (
+  render_engine #(
+    .N_SHOTS
+  ) i_render_engine (
     .clk_i(clk_i),
     .rst_ni(rst_ni),
     .end_of_frame_o(end_of_frame),
@@ -101,7 +111,10 @@ module maw_main
     .draw_start_text_i(draw_start_text),
     // let the renderer know where to render
     .cross_pos_i(crosshair_pos_pix),
-    .ghost_pos_i(enemy_pos_pix)
+    .ghost_pos_i(enemy_pos_pix),
+    // pass in the history for ui
+    .shots_used_i(shots_used_history),
+    .shots_hit_i (shots_hit_history)
   );
 
   //////////////////////////////////////////////
@@ -118,6 +131,17 @@ module maw_main
       game_state == GAME_STATE_RESET         ||
       game_state == GAME_STATE_START_SCREEN
     );
+
+    // Check if we point in the box
+    crosshair_on_enemy = point_in_box(
+      enemy_pos,
+      crosshair_pos,
+      '{x:100, y:100}
+    );
+
+    // Calculate hit or miss
+    shot_hit  = btn_action_held_edge_rising & crosshair_on_enemy;
+    shot_miss = btn_action_held_edge_rising & ~crosshair_on_enemy;
 
     // Decide what to draw on screen
     draw_ghost      = 1'b1;

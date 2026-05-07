@@ -7,7 +7,9 @@
 
 module game_state_fsm import game_logic_pkg::*; #(
   // Define how many shots can be retried
-  parameter int N_SHOTS = 10
+  parameter int N_SHOTS = 10,
+  parameter logic [7:0] DELAY_FRAMES_HIT  = 100,
+  parameter logic [7:0] DELAY_FRAMES_MISS = 100
 ) (
   input clk_i,
   input rst_ni,
@@ -57,9 +59,15 @@ module game_state_fsm import game_logic_pkg::*; #(
   //////////////////////////////////////////////
 
   always_comb begin : game_state_fsm_logic
-    
+    logic [N_SHOTS-1:0] current_shot_mask;
+
     frame_counter_d = frame_counter_q;
-    game_state_d = game_state_q;
+    game_state_d    = game_state_q;
+    used_shots_d    = used_shots_q;
+    score_shots_d   = score_shots_q;
+
+    // Create one active bit where the current shot is
+    current_shot_mask = used_shots_q ^ (used_shots_q<<1 | 'b1);
 
     case (game_state_q)
       GAME_STATE_RESET: begin
@@ -69,7 +77,42 @@ module game_state_fsm import game_logic_pkg::*; #(
       GAME_STATE_START_SCREEN: begin
         game_state_d = btn_action_edge_held_i ? GAME_STATE_SHOOTING : GAME_STATE_START_SCREEN;
       end
-      GAME_STATE_SHOOTING: ;
+      GAME_STATE_SHOOTING: begin
+        if (&used_shots_q) begin
+          // All shots are used return out
+        end 
+        else if (hit_i)    game_state_d = GAME_STATE_HIT;
+        else if (missed_i) game_state_d = GAME_STATE_MISS;
+      end
+      GAME_STATE_HIT: begin
+        game_state_d    = GAME_STATE_HIT_DELAY;
+        frame_counter_d = '0;
+        used_shots_d    = current_shot_mask | used_shots_q;
+        score_shots_d   = current_shot_mask | score_shots_q;
+      end
+      GAME_STATE_HIT_DELAY: begin
+        if(frame_counter_q == DELAY_FRAMES_HIT) begin
+          game_state_d    = GAME_STATE_SHOOTING;
+          frame_counter_d = '0;
+        end else begin
+          game_state_d    = GAME_STATE_HIT_DELAY; 
+          frame_counter_d = frame_counter_d+1;
+        end
+      end
+      GAME_STATE_MISS: begin
+        game_state_d    = GAME_STATE_MISS_DELAY;
+        frame_counter_d = '0;
+        used_shots_d    = current_shot_mask | used_shots_q;
+      end
+      GAME_STATE_MISS_DELAY: begin
+        if(frame_counter_q == DELAY_FRAMES_MISS) begin
+          game_state_d    = GAME_STATE_SHOOTING;
+          frame_counter_d = '0;
+        end else begin
+          game_state_d    = GAME_STATE_MISS_DELAY; 
+          frame_counter_d = frame_counter_d+1;
+        end
+      end
       default: ;
     endcase
   end

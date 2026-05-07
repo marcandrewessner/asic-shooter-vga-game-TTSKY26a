@@ -19,7 +19,7 @@ module ghost_sprite
   );
 
   logic alpha, active;
-  assign alpha = ghost_sprite_generated_out.color[3];
+  assign alpha = ~ghost_sprite_generated_out.color[3];
   assign active = ghost_sprite_generated_out.color[2];
 
   assign sprite_output.color = '{alpha, active, 1'(0), 1'(0)};

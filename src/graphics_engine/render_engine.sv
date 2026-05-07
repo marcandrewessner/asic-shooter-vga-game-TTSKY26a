@@ -13,20 +13,27 @@ module render_engine
   import graphics_engine_pkg::*;
   import graphics_rom_pkg::*;
   import game_logic_pkg::*;
-(
-    input logic clk_i,
-    input logic rst_ni,
+#(
+  parameter int N_SHOTS = 10
+) (
+  input logic clk_i,
+  input logic rst_ni,
 
-    output logic end_of_frame_o,
-    output logic hsync_o,
-    output logic vsync_o,
-    output rgb_t rgb_o,
+  output logic end_of_frame_o,
+  output logic hsync_o,
+  output logic vsync_o,
+  output rgb_t rgb_o,
 
-    input logic draw_start_text_i,
-    input logic draw_crosshair_i,
-    input pix_pos_t cross_pos_i,
-    input logic draw_ghost_i,
-    input pix_pos_t ghost_pos_i
+  input logic draw_start_text_i,
+
+  input logic draw_crosshair_i,
+  input pix_pos_t cross_pos_i,
+  
+  input logic draw_ghost_i,
+  input pix_pos_t ghost_pos_i,
+
+  input logic [N_SHOTS-1:0] shots_used_i,
+  input logic [N_SHOTS-1:0] shots_hit_i
 );
 
   pix_pos_t vga_pos;
@@ -99,22 +106,44 @@ module render_engine
     .sprite_output(start_txt_output)
   );
 
+  //////////////////////////////////////////////
+  // ui shots display //
+  //////////////////////////////////////////////
+  argb_t shots_ui_display_color;
+  localparam pix_pos_t left_center_pos = '{
+    x: 'd200,
+    y: 'd300
+  };
+
+  shot_ui_display #(
+    .N_SHOTS
+  ) i_shot_ui_display (
+    .clk_i, .rst_ni,
+    .left_center_pos ( left_center_pos),
+    .vga_pos         ( vga_pos ),
+    .shots_used_i    ( shots_used_i ),
+    .shots_hit_i     ( shots_hit_i ),
+    .color_o         ( shots_ui_display_color )
+  );
 
   //////////////////////////////////////////////
   // draw the sprites layered //
   //////////////////////////////////////////////
+  logic shots_ui_active;
   logic ghost_active;
   logic cross_active;
   logic start_txt_active;
 
-  assign start_txt_active = ~start_txt_color[3] & draw_start_text_i;
-  assign ghost_active     = ~ghost_color[3]     & draw_ghost_i;
-  assign cross_active     = ~cross_color[3]     & draw_crosshair_i;
+  assign shots_ui_active  = shots_ui_display_color[3]; 
+  assign start_txt_active = start_txt_color[3] & draw_start_text_i;
+  assign ghost_active     = ghost_color[3]     & draw_ghost_i;
+  assign cross_active     = cross_color[3]     & draw_crosshair_i;
 
   always_comb begin
     rgb_o = 3'b000;
     // Layers are built from top to bottom (first is top)!
-    if      (start_txt_active) rgb_o = start_txt_color[2:0];
+    if      (shots_ui_active)  rgb_o = shots_ui_display_color[2:0];
+    else if (start_txt_active) rgb_o = start_txt_color[2:0];
     else if (cross_active)     rgb_o = cross_color[2:0];
     else if (ghost_active)     rgb_o = ghost_color[2:0];
   end

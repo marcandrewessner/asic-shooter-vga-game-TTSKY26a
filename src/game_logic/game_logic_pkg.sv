@@ -32,14 +32,24 @@ package game_logic_pkg;
     return pix_pos_output;
   endfunction
 
+  // Check if point in box, with the box described by center, width and height
+  function logic point_in_box(input game_pos_t point, input game_pos_t box_center, input game_pos_t box_dimensions);
+    return (
+      box_center.x-(box_dimensions.x/2) < point.x && point.x < box_center.x+(box_dimensions.x/2) &&
+      box_center.y-(box_dimensions.y/2) < point.y && point.y < box_center.y+(box_dimensions.y/2)
+    );
+  endfunction
+
   // Define the states for the FSM of the game
-  // 3 bits allows for 8 states
-  typedef enum logic [2:0] { 
+  // 4 bits allows for 16 states
+  typedef enum logic [3:0] { 
     GAME_STATE_RESET,          // Start of the RESET (direct jump to START_SCREEN)
     GAME_STATE_START_SCREEN,   // Start screen
     GAME_STATE_SHOOTING,       // Chasing the enemies
     GAME_STATE_HIT,            // We just hit the ghost (play die animation)
+    GAME_STATE_HIT_DELAY,      // delay the state for n number of frames
     GAME_STATE_MISS,           // we just missed
+    GAME_STATE_MISS_DELAY,     // delay the state for n number of frames
     GAME_STATE_LOST,      // we lost the game
     GAME_STATE_WON       // we won the game
   } game_state_e;

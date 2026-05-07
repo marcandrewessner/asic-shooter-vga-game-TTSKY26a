@@ -27,6 +27,6 @@ module start_text_graphic
   logic white;
   assign white = outerbox_active;
 
-  assign sprite_output.color = {~white, 1'b0, white, 1'b0};
+  assign sprite_output.color = {white, 1'b0, white, 1'b0};
 
 endmodule
