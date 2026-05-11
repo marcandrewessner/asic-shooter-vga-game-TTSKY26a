@@ -39,7 +39,9 @@ module render_engine
   input pix_pos_t ghost_pos_i,
 
   input logic [N_SHOTS-1:0] shots_used_i,
-  input logic [N_SHOTS-1:0] shots_hit_i
+  input logic [N_SHOTS-1:0] shots_hit_i,
+
+  input logic game_tick_i
 );
 
   //////////////////////////////////////////////
@@ -92,7 +94,7 @@ module render_engine
   ) i_bird_animated (
       .clk_i        (clk_i),
       .rst_ni       (rst_ni),
-      .end_of_frame (end_of_frame_o),
+      .end_of_frame (game_tick_i),
       .sprite_input (ghost_input),
       .sprite_output(ghost_output)
   );

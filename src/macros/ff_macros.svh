@@ -3,6 +3,12 @@
 `ifndef __SVH_FF_MACROS__
 `define __SVH_FF_MACROS__
 
+// Define TVSIMULATOR when targeting the TV simulator (30 FPS clock).
+// Comment out for real hardware, which runs at 60 FPS — the game_tick
+// divider in main.sv halves the game-logic rate automatically so all
+// movement speeds and delay timings stay identical.
+`define TVSIMULATOR
+
 
 // Basic FF macro
 `define FFAR(_clk, _rst_n, _q, _d, _rst_val)        \

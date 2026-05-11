@@ -72,7 +72,7 @@ module maw_main
     .N_SHOTS(N_SHOTS)
   ) i_game_state_fsm (
     .clk_i, .rst_ni,
-    .end_of_frame_i         ( end_of_frame ),
+    .end_of_frame_i         ( game_tick ),
     .btn_action_edge_held_i ( btn_action_held_edge_falling ),
     .missed_i               ( shot_miss ),
     .hit_i                  ( shot_hit ),
@@ -86,7 +86,7 @@ module maw_main
   ) i_crosshair_control (
     .clk_i(clk_i),
     .rst_ni(rst_ni),
-    .clk_virt_i(end_of_frame),
+    .clk_virt_i(game_tick),
     // Button inputs
     .btn_up_i(btn_up_sync),
     .btn_down_i(btn_down_sync),
@@ -102,7 +102,7 @@ module maw_main
   enemy_movement i_enemy_movement (
     .clk_i(clk_i),
     .rst_ni(rst_ni),
-    .clk_virt_i(end_of_frame),
+    .clk_virt_i(game_tick),
     .rst_position_i(ENEMY_RST_POS),
     .rtl_i(1),
     .rnd_0_i(rnd_0),
@@ -134,7 +134,8 @@ module maw_main
     .miss_pos_i  ( crosshair_pos_on_event_q ),
     // pass in the history for ui
     .shots_used_i ( shots_used_history ),
-    .shots_hit_i  ( shots_hit_history )
+    .shots_hit_i  ( shots_hit_history ),
+    .game_tick_i  ( game_tick )
   );
 
   //////////////////////////////////////////////
@@ -148,6 +149,25 @@ module maw_main
     .clk_i, .rst_ni,
     .rnd_o ( rnd_1 )
   );
+
+  //////////////////////////////////////////////
+  // game tick                                //
+  // TVSIMULATOR (30 FPS): every VGA frame   //
+  // real HW     (60 FPS): every other frame  //
+  // All movement, FSM, and animation advance //
+  // on game_tick so speeds are identical.    //
+  //////////////////////////////////////////////
+  logic game_tick;
+`ifdef TVSIMULATOR
+  assign game_tick = end_of_frame;
+`else
+  logic frame_div_q;
+  always_ff @(posedge clk_i or negedge rst_ni) begin
+    if (!rst_ni) frame_div_q <= 1'b1;
+    else if (end_of_frame) frame_div_q <= ~frame_div_q;
+  end
+  assign game_tick = end_of_frame & frame_div_q;
+`endif
 
   //////////////////////////////////////////////
   // populate game logic //
@@ -217,13 +237,13 @@ module maw_main
   btn_edge_detector #(
     .EDGE("RISING")
   ) i_btn_edge_b_up_rising (
-    .clk_i, .rst_ni, .clk_virt_i(end_of_frame),
+    .clk_i, .rst_ni, .clk_virt_i(game_tick),
     .signal_i(btn_up_sync), .edge_o(btn_up_held_edge_rising)
   );
   btn_edge_detector #(
     .EDGE("FALLING")
   ) i_btn_edge_b_up_falling (
-    .clk_i, .rst_ni, .clk_virt_i(end_of_frame),
+    .clk_i, .rst_ni, .clk_virt_i(game_tick),
     .signal_i(btn_up_sync), .edge_o(btn_up_held_edge_falling)
   );
   // button down
@@ -234,13 +254,13 @@ module maw_main
   btn_edge_detector #(
     .EDGE("RISING")
   ) i_btn_edge_b_down_rising (
-    .clk_i, .rst_ni, .clk_virt_i(end_of_frame),
+    .clk_i, .rst_ni, .clk_virt_i(game_tick),
     .signal_i(btn_down_sync), .edge_o(btn_down_held_edge_rising)
   );
   btn_edge_detector #(
     .EDGE("FALLING")
   ) i_btn_edge_b_down_falling (
-    .clk_i, .rst_ni, .clk_virt_i(end_of_frame),
+    .clk_i, .rst_ni, .clk_virt_i(game_tick),
     .signal_i(btn_down_sync), .edge_o(btn_down_held_edge_falling)
   );
   // button left
@@ -251,13 +271,13 @@ module maw_main
   btn_edge_detector #(
     .EDGE("RISING")
   ) i_btn_edge_b_left_rising (
-    .clk_i, .rst_ni, .clk_virt_i(end_of_frame),
+    .clk_i, .rst_ni, .clk_virt_i(game_tick),
     .signal_i(btn_left_sync), .edge_o(btn_left_held_edge_rising)
   );
   btn_edge_detector #(
     .EDGE("FALLING")
   ) i_btn_edge_b_left_falling (
-    .clk_i, .rst_ni, .clk_virt_i(end_of_frame),
+    .clk_i, .rst_ni, .clk_virt_i(game_tick),
     .signal_i(btn_left_sync), .edge_o(btn_left_held_edge_falling)
   );
   // button right
@@ -268,13 +288,13 @@ module maw_main
   btn_edge_detector #(
     .EDGE("RISING")
   ) i_btn_edge_b_right_rising (
-    .clk_i, .rst_ni, .clk_virt_i(end_of_frame),
+    .clk_i, .rst_ni, .clk_virt_i(game_tick),
     .signal_i(btn_right_sync), .edge_o(btn_right_held_edge_rising)
   );
   btn_edge_detector #(
     .EDGE("FALLING")
   ) i_btn_edge_b_right_falling (
-    .clk_i, .rst_ni, .clk_virt_i(end_of_frame),
+    .clk_i, .rst_ni, .clk_virt_i(game_tick),
     .signal_i(btn_right_sync), .edge_o(btn_right_held_edge_falling)
   );
   // button action
@@ -285,13 +305,13 @@ module maw_main
   btn_edge_detector #(
     .EDGE("RISING")
   ) i_btn_edge_b_action_rising (
-    .clk_i, .rst_ni, .clk_virt_i(end_of_frame),
+    .clk_i, .rst_ni, .clk_virt_i(game_tick),
     .signal_i(btn_action_sync), .edge_o(btn_action_held_edge_rising)
   );
   btn_edge_detector #(
     .EDGE("FALLING")
   ) i_btn_edge_b_action_falling (
-    .clk_i, .rst_ni, .clk_virt_i(end_of_frame),
+    .clk_i, .rst_ni, .clk_virt_i(game_tick),
     .signal_i(btn_action_sync), .edge_o(btn_action_held_edge_falling)
   );
 
