@@ -5,9 +5,8 @@
 *.fst
 *.fst.hier
 runs
-src/user_config.json
-src/config_merged.json
-test/sim_build
+#src/user_config.json
+#src/config_merged.jsontest/sim_build
 test/results.xml
 test/gate_level_netlist.v
 
@@ -15,9 +14,9 @@ test/gate_level_netlist.v
 *.pyc
 
 # Ignore the tt tooling
-/tt/
-/ttsetup/venv
-/ttsetup/pdk
+#/tt/
+#/ttsetup/venv
+#/ttsetup/pdk
 
 # Ignore the build output of the tvsimulator
 /tvsimulator/build/
