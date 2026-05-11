@@ -1,3 +1,4 @@
+import os
 import re
 import click
 from PIL import Image
@@ -7,6 +8,44 @@ def _module_name(png_path: str) -> str:
     stem = png_path.rsplit("/", 1)[-1].rsplit("\\", 1)[-1]
     stem = stem.rsplit(".", 1)[0]
     return re.sub(r"[^a-zA-Z0-9]", "_", stem).lower()
+
+
+def _quantize_image(img: Image.Image, png_path: str, threshold: int) -> Image.Image:
+    """Snap every channel to 0 or 255. Warn if the source wasn't already binary."""
+    width, height = img.size
+    source_pixels = img.load()
+
+    is_true_1bit = True
+    out = Image.new("RGBA", img.size)
+    out_px = out.load()
+    for y in range(height):
+        for x in range(width):
+            r, g, b, a = source_pixels[x, y]
+            if is_true_1bit and not all(v in (0, 255) for v in (r, g, b, a)):
+                is_true_1bit = False
+            out_px[x, y] = (
+                255 if r >= threshold else 0,
+                255 if g >= threshold else 0,
+                255 if b >= threshold else 0,
+                255 if a >= threshold else 0,
+            )
+
+    if not is_true_1bit:
+        click.echo(
+            f"WARNING: {png_path} is not true 1-bit ARGB "
+            f"(some channels have intermediate values) — quantizing with threshold={threshold}.",
+            err=True,
+        )
+
+    return out
+
+
+def _save_rasterized(img: Image.Image, png_path: str) -> None:
+    os.makedirs("/tmp/rasterized", exist_ok=True)
+    filename = os.path.basename(png_path)
+    out_path = f"/tmp/rasterized/{filename}"
+    img.save(out_path)
+    click.echo(f"Rasterized image saved → {out_path}")
 
 
 def _pixel_to_argb4(r: int, g: int, b: int, a: int) -> str:
@@ -95,7 +134,9 @@ def _generate_sv(module_name: str, pixels: list[list[tuple]], width: int, height
 @click.argument("output", type=click.Path())
 @click.option("--scale", "-s", default=1, show_default=True,
               help="Integer pixel scale factor applied before conversion.")
-def main(png: str, output: str, scale: int) -> None:
+@click.option("--threshold", "-t", default=200, show_default=True,
+              help="Channel threshold (0-255): values >= threshold snap to 255, else 0.")
+def main(png: str, output: str, scale: int, threshold: int) -> None:
     """Convert PNG to a SystemVerilog sprite ROM module.
 
     PNG    Input PNG image file.\n
@@ -111,8 +152,12 @@ def main(png: str, output: str, scale: int) -> None:
         new_h = img.height * scale
         img = img.resize((new_w, new_h), Image.NEAREST)
 
+    img = _quantize_image(img, png, threshold)
+    _save_rasterized(img, png)
+
     width, height = img.size
-    pixels = [[img.getpixel((x, y)) for x in range(width)] for y in range(height)]
+    px = img.load()
+    pixels = [[px[x, y] for x in range(width)] for y in range(height)]
 
     module_name = _module_name(png)
     sv = _generate_sv(module_name, pixels, width, height)
