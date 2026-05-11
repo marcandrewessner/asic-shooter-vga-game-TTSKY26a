@@ -33,6 +33,7 @@ module maw_main
   //////////////////////////////////////////////
   // Renderer //
   logic end_of_frame;
+  logic game_tick;
   pix_pos_t crosshair_pos_pix;
   pix_pos_t enemy_pos_pix;
   logic draw_ghost;
@@ -157,7 +158,6 @@ module maw_main
   // All movement, FSM, and animation advance //
   // on game_tick so speeds are identical.    //
   //////////////////////////////////////////////
-  logic game_tick;
 `ifdef TVSIMULATOR
   assign game_tick = end_of_frame;
 `else
