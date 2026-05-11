@@ -27,6 +27,15 @@ module crosshair_sprite
     vy == cy+1
   );
 
+  // Include the circle
+  sprite_output_t circle;
+  crosshair_circle_sprite i_crosshair_circle_sprite (
+    .clk_i, .rst_ni,
+    .sprite_input,
+    .sprite_output(circle)
+  );
+
+  /*
   // Create the outer box
   localparam pix_coord_t OUTERBOX_WIDTH = 20;
   logic outerbox_active;
@@ -42,9 +51,10 @@ module crosshair_sprite
     vx-INNERBOX_WIDTH < cx && cx < vx+INNERBOX_WIDTH &&
     vy-INNERBOX_WIDTH < cy && cy < vy+INNERBOX_WIDTH
   );
+  */
 
   logic white;
-  assign white = cross_active || (outerbox_active && ~innerbox_active);
+  assign white = cross_active || (circle.color=='h7);
 
   assign sprite_output.color = {white, {3{white}}};
 

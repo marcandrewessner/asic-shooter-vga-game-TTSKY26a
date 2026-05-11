@@ -82,9 +82,12 @@ module render_engine
   sprite_output_t ghost_output;
   assign ghost_color = ghost_output.color;
 
-  ghost_sprite i_ghost_sprite (
+  bird_animated #(
+    .FRAMES_P_STATE (5)
+  ) i_bird_animated (
       .clk_i        (clk_i),
       .rst_ni       (rst_ni),
+      .end_of_frame (end_of_frame_o),
       .sprite_input (ghost_input),
       .sprite_output(ghost_output)
   );
