@@ -10,17 +10,67 @@ jobs:
     steps:
       - name: checkout repo
         uses: actions/checkout@v6
-        with:
-          submodules: recursive
 
-      - name: Build GDS
-        uses: TinyTapeout/tt-gds-action/custom_gds@ttsky26a
+      - name: Update commit_id.json
+        run: |
+          jq -n \
+            --arg app "tt_um_maw_game local harden" \
+            --arg repo "${{ github.server_url }}/${{ github.repository }}" \
+            --arg commit "${{ github.sha }}" \
+            --arg workflow_url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            '{app: $app, repo: $repo, commit: $commit, workflow_url: $workflow_url}' \
+            > tt_submission/commit_id.json
+
+      # Artifact structure matches custom_gds/action.yml lines 79-86
+      - name: Publish tt_submission artifact
+        uses: actions/upload-artifact@v7
         with:
-          pdk: sky130A
-          top_module: tt_um_maw_game
-          gds_path: tt_submission/tt_um_maw_game.gds
-          lef_path: tt_submission/tt_um_maw_game.lef
-          verilog_path: tt_submission/tt_um_maw_game.v
+          name: tt_submission
+          path: |
+            info.yaml
+            LICENSE
+            docs/*
+            tt_submission/*
+
+      # Render PNG — mirrors custom_gds/action.yml lines 88-122
+      # librsvg2-bin provides rsvg-convert; pngquant for compression (render_utils.py)
+      - name: Install prerequisites for PNG rendering
+        uses: awalsh128/cache-apt-pkgs-action@v1.4.3
+        with:
+          packages: librsvg2-bin pngquant
+          version: ttcache
+
+      # Checkout tt-support-tools so tt_tool.py --create-png is available
+      # (overwrites the submodule; the submodule is not needed here)
+      - name: Checkout tt-support-tools
+        uses: actions/checkout@v6
+        with:
+          repository: TinyTapeout/tt-support-tools
+          path: tt
+
+      - name: Setup python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      # requirements.txt includes klayout==0.29.12 which project.py imports
+      - name: Install tt-support-tools dependencies
+        run: pip install -r tt/requirements.txt
+
+      # GDS_PATH tells get_final_gds() (project.py:702) to use our pre-built GDS
+      # instead of looking in runs/wokwi/final/gds/*.gds
+      - name: Render PNG from GDS
+        run: './tt/tt_tool.py --create-png 2>&1 || echo "WARNING: Failed to render PNG preview from GDS; error $?"'
+        env:
+          GDS_PATH: tt_submission/tt_um_maw_game.gds
+
+      # viewer/action.yml line 23 downloads this artifact into gh-pages/
+      - name: Upload gds_render (png) artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gds_render
+          path: 'gds_render.png'
 
   precheck:
     needs: gds
