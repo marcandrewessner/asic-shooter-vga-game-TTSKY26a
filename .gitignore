@@ -16,7 +16,7 @@ test/gate_level_netlist.v
 # Ignore the tt tooling
 #/tt/
 #/ttsetup/venv
-#/ttsetup/pdk
+/ttsetup/pdk
 
 # Ignore the build output of the tvsimulator
 /tvsimulator/build/
