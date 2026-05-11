@@ -17,3 +17,4 @@ source ttsetup/activate
 
 python tt/tt_tool.py --create-user-config
 python tt/tt_tool.py --harden
+python tt/tt_tool.py --create-tt-submission
