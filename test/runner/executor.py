@@ -1,7 +1,7 @@
 from pathlib import Path
 from .discovery import find_testbench, TestbenchNotFoundError
 from .sources import get_verilog_sources
-from .paths import TESTMOD_ROOT, WAVES_ROOT, DUMPWAVE_OUT, DUMPWAVE_TEMPLATE
+from .paths import TESTMOD_ROOT, WAVES_ROOT, DUMPWAVE_OUT, DUMPWAVE_TEMPLATE, INCLUDE_DIRS
 
 from cocotb_tools.runner import get_runner
 
@@ -22,7 +22,8 @@ def run_test(testmodule, fst_wave=True):
     hdl_toplevel=tb,
     always=True,
     timescale=("1ns", "1ns"),
-    build_args=build_args
+    build_args=build_args,
+    includes=INCLUDE_DIRS,
   )
   runner.test(
     hdl_toplevel=tb,

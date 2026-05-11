@@ -2,6 +2,7 @@ from pathlib import Path
 
 TEST_ROOT      = Path(__file__).parent.parent
 SRC_ROOT       = Path(TEST_ROOT, "../src")
+INCLUDE_DIRS   = [Path(SRC_ROOT, "macros")]
 TESTMOD_ROOT   = Path(TEST_ROOT, "testmodules")
 TESTBENCH_ROOT = Path(TEST_ROOT, "testbenches")
 WAVES_ROOT     = Path(TEST_ROOT, "waves")
