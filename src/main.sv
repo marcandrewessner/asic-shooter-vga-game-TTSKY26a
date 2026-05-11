@@ -50,7 +50,9 @@ module maw_main
   localparam game_pos_t CROSSHAIR_RESET_POS = '{x:150, y:100};
   logic crosshair_controller_reset, crosshair_controller_lock;
   game_pos_t crosshair_pos;
+  game_pos_t crosshair_pos_on_event_d, crosshair_pos_on_event_q;
   
+  logic enemy_pos_freeze;
   game_pos_t enemy_pos;
   logic crosshair_on_enemy;
   
@@ -59,7 +61,7 @@ module maw_main
 
   logic [15:0] rnd_0;
   logic [15:0] rnd_1;
- 
+
   //////////////////////////////////////////////
   // instantiate game logic & rendering //
   //////////////////////////////////////////////
@@ -104,6 +106,7 @@ module maw_main
     .rnd_0_i(rnd_0),
     .rnd_1_i(rnd_1),
     .rerandomize_i(enemy_rerandomize),
+    .freeze_i(enemy_pos_freeze),
     .enemy_position_o(enemy_pos)
   );
 
@@ -126,6 +129,7 @@ module maw_main
     // let the renderer know where to render
     .cross_pos_i ( crosshair_pos_pix ),
     .ghost_pos_i ( enemy_pos_pix ),
+    .miss_pos_i  ( crosshair_pos_on_event_q ),
     // pass in the history for ui
     .shots_used_i ( shots_used_history ),
     .shots_hit_i  ( shots_hit_history )
@@ -147,16 +151,26 @@ module maw_main
   // populate game logic //
   //////////////////////////////////////////////
   always_comb begin : main_game_logic 
+    crosshair_pos_on_event_d = crosshair_pos_on_event_q;
     // Set the crosshair control state
     crosshair_controller_lock = ~(
       game_state == GAME_STATE_SHOOTING  ||
       game_state == GAME_STATE_HIT       ||
-      game_state == GAME_STATE_MISS
+      game_state == GAME_STATE_HIT_DELAY ||
+      game_state == GAME_STATE_MISS      ||
+      game_state == GAME_STATE_MISS_DELAY
     );
     crosshair_controller_reset = (
       game_state == GAME_STATE_RESET         ||
       game_state == GAME_STATE_START_SCREEN
     );
+
+    // freeze the enemy pos if hit
+    enemy_pos_freeze = (game_state==GAME_STATE_HIT || game_state==GAME_STATE_HIT_DELAY);
+
+    // set the pos where the event happened
+    if(game_state == GAME_STATE_HIT || game_state == GAME_STATE_MISS)
+      crosshair_pos_on_event_d = crosshair_pos;
 
     // Check if we point in the box
     crosshair_on_enemy = point_in_box(
@@ -184,6 +198,7 @@ module maw_main
     enemy_pos_pix     = game2pix_pos_transformation(enemy_pos);
   end
 
+  `FFAR_EN(clk_i, rst_ni, '0, crosshair_pos_on_event_q, crosshair_pos_on_event_d, end_of_frame)
 
 
 

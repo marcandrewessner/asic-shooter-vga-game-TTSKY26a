@@ -26,6 +26,7 @@ module enemy_movement
     input logic [15:0] rnd_0_i,
     input logic [15:0] rnd_1_i,
     input logic rerandomize_i,
+    input logic freeze_i,
 
     // Output the position of the ghost
     output game_pos_t enemy_position_o
@@ -35,6 +36,27 @@ module enemy_movement
   localparam game_coord_t MOVEMENT_SPEED = 3;
 
   game_pos_t pos_d, pos_q;
+
+  //////////////////////////////////////////////
+  // Deferred rerandomize                     //
+  // If rerandomize_i arrives while frozen,   //
+  // latch it and fire when freeze lifts.     //
+  //////////////////////////////////////////////
+  logic rerandomize_pending_q;
+  always_ff @(posedge clk_i or negedge rst_ni) begin
+    if (!rst_ni) begin
+      rerandomize_pending_q <= 1'b0;
+    end else begin
+      if (rerandomize_i && freeze_i)
+        rerandomize_pending_q <= 1'b1;
+      else if (!freeze_i)
+        rerandomize_pending_q <= 1'b0;
+    end
+  end
+
+  // Fires the cycle freeze drops (deferred) or immediately when not frozen
+  logic do_rerandomize;
+  assign do_rerandomize = (rerandomize_i || rerandomize_pending_q) && !freeze_i;
 
   //////////////////////////////////////////////
   // Registered wave parameters               //
@@ -52,7 +74,7 @@ module enemy_movement
       wave1_step_q <= game_coord_t'(1);
       wave2_amp_q  <= game_coord_t'(10);
       wave2_step_q <= game_coord_t'(2);
-    end else if (rerandomize_i) begin
+    end else if (do_rerandomize) begin
       wave1_amp_q  <= game_coord_t'(rnd_0_i[6:0]);                        // 7-bit → 0..127
       wave1_step_q <= game_coord_t'(rnd_0_i[8:7]) + game_coord_t'(1);    // 2-bit → 1..4
       wave2_amp_q  <= game_coord_t'(rnd_1_i[6:0]);                        // 7-bit → 0..127
@@ -64,7 +86,7 @@ module enemy_movement
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
       pos_q <= rst_position_i;
-    end else if (rerandomize_i) begin
+    end else if (do_rerandomize) begin
       pos_q <= '{x: '0, y: ENEMY_Y_CENTER};
     end else if (clk_virt_i) begin
       pos_q <= pos_d;
@@ -81,7 +103,7 @@ module enemy_movement
     .clk_i, .rst_ni, .clk_virt_i,
     .counter_top   (wave1_amp_q),
     .step_i        (wave1_step_q),
-    .rerandomize_i (rerandomize_i),
+    .rerandomize_i (do_rerandomize),
     .wave_o        (wave1_val),
     .is_negative_o (wave1_is_negative)
   );
@@ -90,7 +112,7 @@ module enemy_movement
     .clk_i, .rst_ni, .clk_virt_i,
     .counter_top   (wave2_amp_q),
     .step_i        (wave2_step_q),
-    .rerandomize_i (rerandomize_i),
+    .rerandomize_i (do_rerandomize),
     .wave_o        (wave2_val),
     .is_negative_o (wave2_is_negative)
   );
@@ -109,9 +131,13 @@ module enemy_movement
     total_dev = dev1 + dev2;
     y_signed  = $signed({2'b0, ENEMY_Y_CENTER}) + total_dev;
 
-    pos_d.x = pos_q.x + MOVEMENT_SPEED;
-    pos_d.y = y_signed[11] ? 10'd0
-            : (y_signed[10:0] > 11'd479 ? 10'd479 : y_signed[9:0]);
+    if(freeze_i) begin
+      pos_d = pos_q;
+    end else begin
+      pos_d.x = pos_q.x + MOVEMENT_SPEED;
+      pos_d.y = y_signed[11] ? 10'd0
+              : (y_signed[10:0] > 11'd479 ? 10'd479 : y_signed[9:0]);
+    end
   end
 
   assign enemy_position_o = pos_q;

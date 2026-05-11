@@ -26,9 +26,11 @@ module render_engine
 
   input logic draw_start_text_i,
   input logic draw_hit_i,
-  input logic draw_miss_i,
   input logic draw_won_i,
   input logic draw_lost_i,
+
+  input logic draw_miss_i,
+  input pix_pos_t miss_pos_i,
 
   input logic draw_crosshair_i,
   input pix_pos_t cross_pos_i,
@@ -106,7 +108,7 @@ module render_engine
   sprite_output_t start_txt_output;
   assign start_txt_color = start_txt_output.color;
 
-  start_text_graphic i_start_text_graphic (
+  press_to_start_graphic i_press_to_start_graphic (
     .clk_i        (clk_i),
     .rst_ni       (rst_ni),
     .sprite_input (start_txt_input),
@@ -114,40 +116,17 @@ module render_engine
   );
 
   //////////////////////////////////////////////
-  // hit graphic //
-  //////////////////////////////////////////////
-  argb_t hit_color;
-  sprite_input_t hit_input;
-  assign hit_input.center_pix = '{
-    x: 10'(SCREEN_WIDTH/2),
-    y: 10'(SCREEN_HEIGHT/2)
-  };
-  assign hit_input.vga_pos = vga_pos;
-
-  sprite_output_t hit_output;
-  assign hit_color = hit_output.color;
-
-  hit_graphic i_hit_graphic (
-    .clk_i, .rst_ni,
-    .sprite_input (hit_input),
-    .sprite_output(hit_output)
-  );
-
-  //////////////////////////////////////////////
   // miss graphic //
   //////////////////////////////////////////////
   argb_t miss_color;
   sprite_input_t miss_input;
-  assign miss_input.center_pix = '{
-    x: 10'(SCREEN_WIDTH/2),
-    y: 10'(SCREEN_HEIGHT/2)
-  };
+  assign miss_input.center_pix = miss_pos_i;
   assign miss_input.vga_pos = vga_pos;
 
   sprite_output_t miss_output;
   assign miss_color = miss_output.color;
 
-  miss_graphic i_miss_graphic (
+  miss_x i_miss_graphic (
     .clk_i, .rst_ni,
     .sprite_input (miss_input),
     .sprite_output(miss_output)
@@ -194,6 +173,26 @@ module render_engine
   );
 
   //////////////////////////////////////////////
+  // reloading graphic //
+  //////////////////////////////////////////////
+  argb_t reloading_color;
+  sprite_input_t reloading_input;
+  assign reloading_input.center_pix = '{
+    x: 10'(SCREEN_WIDTH/2),
+    y: 10'(SCREEN_HEIGHT/4*3)
+  };
+  assign reloading_input.vga_pos = vga_pos;
+
+  sprite_output_t reloading_output;
+  assign reloading_color = reloading_output.color;
+
+  reloading_graphic i_relaoding_graphic (
+    .clk_i, .rst_ni,
+    .sprite_input (reloading_input),
+    .sprite_output(reloading_output)
+  );
+
+  //////////////////////////////////////////////
   // ui shots display //
   //////////////////////////////////////////////
   argb_t shots_ui_display_color;
@@ -224,15 +223,24 @@ module render_engine
   logic miss_active;
   logic won_active;
   logic lost_active;
+  logic reload_active;
 
   assign shots_ui_active  = shots_ui_display_color[3];
   assign start_txt_active = start_txt_color[3] & draw_start_text_i;
   assign ghost_active     = ghost_color[3]     & draw_ghost_i;
   assign cross_active     = cross_color[3]     & draw_crosshair_i;
-  assign hit_active       = hit_color[3]       & draw_hit_i;
   assign miss_active      = miss_color[3]      & draw_miss_i;
   assign won_active       = won_color[3]       & draw_won_i;
   assign lost_active      = lost_color[3]      & draw_lost_i;
+  assign reload_active    = reloading_color[3] & (draw_hit_i || draw_miss_i);
+
+  argb_t bird_color_filtered;
+  always_comb begin
+    bird_color_filtered = ghost_color;
+    // turn blue to red if hit
+    if(draw_hit_i && bird_color_filtered==4'b1001)
+      bird_color_filtered = 4'b1100;
+  end
 
   always_comb begin
     rgb_o = 3'b000;
@@ -242,9 +250,9 @@ module render_engine
     else if (lost_active)      rgb_o = lost_color[2:0];
     else if (start_txt_active) rgb_o = start_txt_color[2:0];
     else if (cross_active)     rgb_o = cross_color[2:0];
-    else if (hit_active)       rgb_o = hit_color[2:0];
     else if (miss_active)      rgb_o = miss_color[2:0];
-    else if (ghost_active)     rgb_o = ghost_color[2:0];
+    else if (reload_active)    rgb_o = reloading_color[2:0];
+    else if (ghost_active)     rgb_o = bird_color_filtered[2:0];
   end
 
 endmodule

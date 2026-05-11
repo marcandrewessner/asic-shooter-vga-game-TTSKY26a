@@ -1,0 +1,73 @@
+module bullet_sprite
+  import graphics_engine_pkg::*;
+  import graphics_rom_pkg::*;
+(
+  input logic clk_i,
+  input logic rst_ni,
+
+  input sprite_input_t sprite_input,
+  output sprite_output_t sprite_output
+);
+
+  pix_coord_t cx, cy, vx, vy;
+  assign cx = sprite_input.center_pix.x;
+  assign cy = sprite_input.center_pix.y;
+  assign vx = sprite_input.vga_pos.x;
+  assign vy = sprite_input.vga_pos.y;
+
+  // Sprite size: 20 x 30, center offset: (10, 15)
+  localparam int W      = 20;
+  localparam int H      = 30;
+  localparam int HALF_W = 10;
+  localparam int HALF_H = 15;
+
+  localparam logic [3:0] SPRITE_ROM [0:29][0:19] = '{
+    '{4'h0, 4'h0, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h0, 4'h0},
+    '{4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6},
+    '{4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h0, 4'h0, 4'h0, 4'h0, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6},
+    '{4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6},
+    '{4'h0, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h0},
+    '{4'h0, 4'h0, 4'h0, 4'h0, 4'h0, 4'h0, 4'h0, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h6, 4'h0, 4'h0, 4'h0, 4'h0, 4'h0, 4'h0},
+    '{4'h0, 4'h0, 4'h7, 4'h7, 4'h7, 4'h0, 4'h0, 4'h0, 4'h0, 4'h0, 4'h0, 4'h0, 4'h0, 4'h0, 4'h0, 4'h0, 4'h7, 4'h7, 4'h0, 4'h0},
+    '{4'h0, 4'h0, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h0, 4'h0, 4'h0, 4'h0, 4'h0, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h0, 4'h0},
+    '{4'h0, 4'h0, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h0, 4'h0},
+    '{4'h0, 4'h0, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h0, 4'h0},
+    '{4'h0, 4'h0, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h0, 4'h0},
+    '{4'h0, 4'h0, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h0, 4'h0},
+    '{4'h0, 4'h0, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h0, 4'h0},
+    '{4'h0, 4'h0, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h0, 4'h0},
+    '{4'h0, 4'h0, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h0, 4'h0},
+    '{4'h0, 4'h0, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h0, 4'h0},
+    '{4'h0, 4'h0, 4'h0, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h0, 4'h0, 4'h0},
+    '{4'h0, 4'h0, 4'h0, 4'h0, 4'h0, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h0, 4'h0, 4'h0, 4'h0, 4'h0},
+    '{4'h0, 4'h0, 4'h7, 4'h0, 4'h0, 4'h0, 4'h0, 4'h0, 4'h0, 4'h0, 4'h0, 4'h0, 4'h0, 4'h0, 4'h0, 4'h0, 4'h0, 4'h7, 4'h0, 4'h0},
+    '{4'h0, 4'h0, 4'h7, 4'h7, 4'h7, 4'h0, 4'h0, 4'h0, 4'h0, 4'h0, 4'h0, 4'h0, 4'h0, 4'h0, 4'h0, 4'h7, 4'h7, 4'h7, 4'h0, 4'h0},
+    '{4'h0, 4'h0, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h0, 4'h0},
+    '{4'h0, 4'h0, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h0, 4'h0},
+    '{4'h0, 4'h0, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h0, 4'h0},
+    '{4'h0, 4'h0, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h0, 4'h0},
+    '{4'h0, 4'h0, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h0, 4'h0},
+    '{4'h0, 4'h0, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h0, 4'h0},
+    '{4'h0, 4'h0, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h0, 4'h0},
+    '{4'h0, 4'h0, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h0, 4'h0},
+    '{4'h0, 4'h0, 4'h0, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h0, 4'h0, 4'h0},
+    '{4'h0, 4'h0, 4'h0, 4'h0, 4'h0, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h7, 4'h0, 4'h0, 4'h0, 4'h0, 4'h0}
+  };
+
+  // Signed pixel offset from sprite center (32-bit to match localparam width)
+  logic signed [31:0] dx, dy;
+  assign dx = $signed({22'b0, vx}) - $signed({22'b0, cx});
+  assign dy = $signed({22'b0, vy}) - $signed({22'b0, cy});
+
+  logic in_bounds;
+  assign in_bounds = (dx >= -HALF_W) && (dx < W - HALF_W) &&
+                     (dy >= -HALF_H) && (dy < H - HALF_H);
+
+  logic [4:0] row_idx;
+  logic [4:0] col_idx;
+  assign row_idx = 5'(dy + HALF_H);
+  assign col_idx = 5'(dx + HALF_W);
+
+  assign sprite_output.color = in_bounds ? SPRITE_ROM[row_idx][col_idx] : 4'h8;
+
+endmodule

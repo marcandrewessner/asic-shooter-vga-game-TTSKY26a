@@ -73,7 +73,7 @@ def _generate_sv(module_name: str, pixels: list[list[tuple]], width: int, height
     lines = []
     a = lines.append
 
-    a(f"module {module_name}_sprite")
+    a(f"module {module_name}")
     a(f"  import graphics_engine_pkg::*;")
     a(f"  import graphics_rom_pkg::*;")
     a(f"(")
@@ -122,7 +122,13 @@ def _generate_sv(module_name: str, pixels: list[list[tuple]], width: int, height
     a(f"  assign row_idx = {row_bits}'(dy + HALF_H);")
     a(f"  assign col_idx = {col_bits}'(dx + HALF_W);")
     a(f"")
-    a(f"  assign sprite_output.color = in_bounds ? SPRITE_ROM[row_idx][col_idx] : 4'h8;")
+    a(f"  // override the alpha channel: any colored pixel is made active")
+    a(f"  always_comb begin")
+    a(f"    logic [3:0] color;")
+    a(f"    color = in_bounds ? SPRITE_ROM[row_idx][col_idx] : 4'h8;")
+    a(f"    color[3] = |color[2:0];")
+    a(f"    sprite_output.color = color;")
+    a(f"  end")
     a(f"")
     a(f"endmodule")
 
@@ -159,13 +165,13 @@ def main(png: str, output: str, scale: int, threshold: int) -> None:
     px = img.load()
     pixels = [[px[x, y] for x in range(width)] for y in range(height)]
 
-    module_name = _module_name(png)
+    module_name = _module_name(output)
     sv = _generate_sv(module_name, pixels, width, height)
 
     with open(output, "w") as f:
         f.write(sv)
 
-    click.echo(f"Generated {output}  ({width}x{height} px, module: {module_name}_sprite)")
+    click.echo(f"Generated {output}  ({width}x{height} px, module: {module_name})")
 
 
 if __name__ == "__main__":

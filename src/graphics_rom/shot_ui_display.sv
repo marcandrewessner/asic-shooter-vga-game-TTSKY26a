@@ -2,7 +2,10 @@
 // Use this module to display the misses
 // on screen
 
-module shot_ui_display import graphics_engine_pkg::*; #(
+module shot_ui_display
+  import graphics_engine_pkg::*;
+  import graphics_rom_pkg::*;
+#(
   // how many shots to display
   parameter int N_SHOTS = 10,
   // Define appearance
@@ -38,31 +41,34 @@ module shot_ui_display import graphics_engine_pkg::*; #(
       assign item_hit  = shots_hit_i[N_SHOTS-1-i];
 
       // Build up the item drawing
-      pix_coord_t cx, cy, vx, vy;
-      assign cx = left_center_pos.x + item_center_x;
-      assign cy = left_center_pos.y;
-      assign vx = vga_pos.x;
-      assign vy = vga_pos.y;
+      sprite_output_t bullet_sprite_output;
+      sprite_input_t bullet_sprite_input;
 
-      // Create the outer box
-      localparam pix_coord_t OUTERBOX_WIDTH  = 10;
-      localparam pix_coord_t OUTERBOX_HEIGHT = 15;
-      logic outerbox_active;
-      assign outerbox_active = (
-        vx-OUTERBOX_WIDTH  < cx && cx < vx+OUTERBOX_WIDTH &&
-        vy-OUTERBOX_HEIGHT < cy && cy < vy+OUTERBOX_HEIGHT
+      assign bullet_sprite_input = '{
+        center_pix: '{
+          x: left_center_pos.x + item_center_x,
+          y: left_center_pos.y
+        },
+        vga_pos: vga_pos
+      };
+
+      bullet_sprite i_bullet_sprite (
+        .clk_i, .rst_ni,
+        .sprite_input(bullet_sprite_input),
+        .sprite_output(bullet_sprite_output)
       );
 
-      // Build up the color
+      // Build up the output
       always_comb begin
-        if(outerbox_active && !item_used)
-          item_colors[i] = 4'b1111; // white
-        else if(outerbox_active && item_used && item_hit)
+        argb_t color;
+        color = bullet_sprite_output.color ^ 4'b1000;
+        // Allow switching colors
+        if(color=='b1111 && item_used && item_hit)
           item_colors[i] = 4'b1010; // green
-        else if(outerbox_active && item_used && !item_hit)
+        else if(color=='b1111 && item_used && !item_hit)
           item_colors[i] = 4'b1100; // red
         else
-          item_colors[i] = 'b0;
+          item_colors[i] = color;
       end
     
     end
