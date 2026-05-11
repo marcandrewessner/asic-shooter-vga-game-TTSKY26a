@@ -33,10 +33,11 @@ module bird_animated
     if(!rst_ni) begin
       frame_counter_q <= '0;
       animation_frame_q <= '0;
-    end
-    if(end_of_frame) begin
-      frame_counter_q <= frame_counter_d;
-      animation_frame_q <= animation_frame_d;
+    end else begin
+      if(end_of_frame) begin
+        frame_counter_q <= frame_counter_d;
+        animation_frame_q <= animation_frame_d;
+      end
     end
   end
 
