@@ -42,6 +42,9 @@ module render_engine
   input logic [N_SHOTS-1:0] shots_hit_i
 );
 
+  //////////////////////////////////////////////
+  // VGA //
+  //////////////////////////////////////////////
   pix_pos_t vga_pos;
   vgatiming i_vgat (
       .clk_i            (clk_i),
