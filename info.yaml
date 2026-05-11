@@ -1,9 +1,9 @@
 # Tiny Tapeout project information
 project:
-  title:        "BNN MNIST Inference"      # Project title
+  title:        "MAW Bird Shooter VGA Game"      # Project title
   author:       "Marc-Andre"      # Your name
   discord:      ""      # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
-  description:  "A fully pipelined hardware BNN inference engine that classifies MNIST digits by sequencing a quantized autoencoder (3 binary conv layers + 2 max-pool layers) through shared SRAM, followed by a combinational XGBoost decision tree, all generated from trained model weights via Jinja2 codegen and verified end-to-end in cocotb simulation against the Python reference."      # One line description of what your project does
+  description:  "A fully synthesized single-player bird-shooting arcade game on a Tiny Tapeout ASIC driving a 640x480 60 Hz VGA display: move a crosshair with four directional buttons and press SHOOT to hit a wandering animated bird within 10 shots, with HIT/MISS overlays, a shot counter, and win/lose screens."      # One line description of what your project does
   language:     "SystemVerilog" # other examples include SystemVerilog, Amaranth, VHDL, etc
   clock_hz:     50000000       # Clock frequency in Hz (or 0 if not applicable)
 
@@ -57,21 +57,21 @@ pinout:
   ui[0]: ""
   ui[1]: ""
   ui[2]: ""
-  ui[3]: ""
-  ui[4]: ""
-  ui[5]: ""
-  ui[6]: ""
-  ui[7]: ""
+  ui[3]: "BTN_SHOOT (active-high, pull-down externally)"
+  ui[4]: "BTN_RIGHT (active-high, pull-down externally)"
+  ui[5]: "BTN_LEFT (active-high, pull-down externally)"
+  ui[6]: "BTN_DOWN (active-high, pull-down externally)"
+  ui[7]: "BTN_UP (active-high, pull-down externally)"
 
   # Outputs
   uo[0]: ""
   uo[1]: ""
   uo[2]: ""
-  uo[3]: ""
-  uo[4]: ""
-  uo[5]: ""
-  uo[6]: ""
-  uo[7]: ""
+  uo[3]: "VGA_B (Blue, 1-bit)"
+  uo[4]: "VGA_G (Green, 1-bit)"
+  uo[5]: "VGA_R (Red, 1-bit)"
+  uo[6]: "VGA_VSYNC"
+  uo[7]: "VGA_HSYNC"
 
   # Bidirectional pins
   uio[0]: ""
