@@ -34,8 +34,8 @@
     "dir::project.sv",
     "dir::main.sv"
   ],
-  "DIE_AREA": "0 0 508.76 225.76",
-  "FP_DEF_TEMPLATE": "dir::../tt/tech/sky130A/def/tt_block_3x2_pg.def",
+  "DIE_AREA": "0 0 334.88 225.76",
+  "FP_DEF_TEMPLATE": "dir::../tt/tech/sky130A/def/tt_block_2x2_pg.def",
   "VDD_PIN": "VPWR",
   "GND_PIN": "VGND",
   "RT_MAX_LAYER": "met4"
