@@ -88,6 +88,7 @@ module bird_animated
       'd2 : color = bird_2_output.color;
       'd3 : color = bird_3_output.color;
       'd4 : color = bird_4_output.color;
+      default: color = '0;
     endcase
   end 
 

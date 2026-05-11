@@ -1,4 +1,6 @@
 
+`include "ff_macros.svh"
+
 module maw_main
   import graphics_engine_pkg::*;
   import game_logic_pkg::*;
