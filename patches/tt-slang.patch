@@ -1,5 +1,5 @@
 diff --git a/project.py b/project.py
-index ef41ba1..c074766 100644
+index ef41ba1..369c606 100644
 --- a/project.py
 +++ b/project.py
 @@ -153,15 +153,36 @@ class Project:
@@ -46,3 +46,15 @@ index ef41ba1..c074766 100644
          if p.returncode != 0:
              logging.error(f"yosys port read failed for {self}")
              exit(1)
+@@ -483,6 +504,11 @@ class Project:
+     def create_user_config(self):
+         if self.is_wokwi():
+             self.fetch_wokwi_files()
++        user_config_path = os.path.join(self.src_dir, "user_config.json")
++        if os.path.exists(user_config_path):
++            logging.info("user_config.json already exists, skipping port check")
++            self.create_merged_config()
++            return
+         self.check_ports()
+         logging.info("creating include file")
+         tiles = self.info.tiles
