@@ -13,6 +13,10 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Apply tt patches
+        run: git apply ../patches/tt-slang.patch
+        working-directory: tt
+
       - name: Build GDS
         uses: TinyTapeout/tt-gds-action@ttsky26a
         with:

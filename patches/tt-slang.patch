@@ -1,0 +1,48 @@
+diff --git a/project.py b/project.py
+index ef41ba1..c074766 100644
+--- a/project.py
++++ b/project.py
+@@ -153,15 +153,36 @@ class Project:
+ 
+         json_file = "ports.json"
+ 
+-        # Heuristic - try reading just the first source file, if that fails, try all of them
+-        p = self.run_yosys(
+-            f"read_verilog -lib -sv {sources[0]}; hierarchy -top {top} ; proc; write_json {json_file}",
+-            True,
+-        )
+-        if p.returncode != 0:
++        use_slang = False
++        config_path = os.path.join(self.src_dir, "config.json")
++        if os.path.exists(config_path):
++            try:
++                with open(config_path) as f:
++                    use_slang = json.load(f).get("USE_SLANG", False)
++            except Exception:
++                pass
++
++        if use_slang and shutil.which("yosys"):
++            include_dirs = [os.path.join(self.src_dir, "macros")]
++            with open(config_path) as f:
++                cfg = json.load(f)
++            for d in cfg.get("VERILOG_INCLUDE_DIRS") or []:
++                include_dirs.append(d)
++            include_args = " ".join(f"-I{d}" for d in include_dirs)
++            env = os.environ.copy()
++            env["YOSYS_CMD"] = f"plugin -i slang; read_slang --top {top} {include_args} {source_list}; hierarchy -top {top}; proc; write_json {json_file}"
++            p = subprocess.run('yosys -qp "$YOSYS_CMD"', shell=True, env=env)
++        else:
++            # Heuristic - try reading just the first source file, if that fails, try all of them
+             p = self.run_yosys(
+-                f"read_verilog -lib -sv {source_list}; hierarchy -top {top} ; proc; write_json {json_file}"
++                f"read_verilog -lib -sv {sources[0]}; hierarchy -top {top} ; proc; write_json {json_file}",
++                True,
+             )
++            if p.returncode != 0:
++                p = self.run_yosys(
++                    f"read_verilog -lib -sv {source_list}; hierarchy -top {top} ; proc; write_json {json_file}"
++                )
++
+         if p.returncode != 0:
+             logging.error(f"yosys port read failed for {self}")
+             exit(1)
