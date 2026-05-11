@@ -13,14 +13,14 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Apply tt patches
-        run: git apply ../patches/tt-slang.patch
-        working-directory: tt
-
       - name: Build GDS
-        uses: TinyTapeout/tt-gds-action@ttsky26a
+        uses: TinyTapeout/tt-gds-action/custom_gds@ttsky26a
         with:
           pdk: sky130A
+          top_module: tt_um_maw_game
+          gds_path: tt_submission/tt_um_maw_game.gds
+          lef_path: tt_submission/tt_um_maw_game.lef
+          verilog_path: tt_submission/tt_um_maw_game.v
 
   precheck:
     needs: gds
