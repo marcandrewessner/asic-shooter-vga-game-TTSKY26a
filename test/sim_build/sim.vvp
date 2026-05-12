@@ -1,0 +1,261 @@
+#! /nix/store/l5xsah6k4jpfjnrrdz9f0wc5y4xz90bd-iverilog-s20250103-60-gdb82380ce/bin/vvp
+:ivl_version "13.0 (devel)";
+:ivl_delay_selection "TYPICAL";
+:vpi_time_precision - 9;
+:vpi_module "/nix/store/l5xsah6k4jpfjnrrdz9f0wc5y4xz90bd-iverilog-s20250103-60-gdb82380ce/lib/ivl/system.vpi";
+:vpi_module "/nix/store/l5xsah6k4jpfjnrrdz9f0wc5y4xz90bd-iverilog-s20250103-60-gdb82380ce/lib/ivl/vhdl_sys.vpi";
+:vpi_module "/nix/store/l5xsah6k4jpfjnrrdz9f0wc5y4xz90bd-iverilog-s20250103-60-gdb82380ce/lib/ivl/vhdl_textio.vpi";
+:vpi_module "/nix/store/l5xsah6k4jpfjnrrdz9f0wc5y4xz90bd-iverilog-s20250103-60-gdb82380ce/lib/ivl/v2005_math.vpi";
+:vpi_module "/nix/store/l5xsah6k4jpfjnrrdz9f0wc5y4xz90bd-iverilog-s20250103-60-gdb82380ce/lib/ivl/va_math.vpi";
+:vpi_module "/nix/store/l5xsah6k4jpfjnrrdz9f0wc5y4xz90bd-iverilog-s20250103-60-gdb82380ce/lib/ivl/v2009.vpi";
+S_0x104c9cb80 .scope package, "$unit" "$unit" 2 1;
+ .timescale -9 -9;
+S_0x104c9cd00 .scope package, "graphic_consts" "graphic_consts" 3 2;
+ .timescale -9 -9;
+P_0x8f0c3c000 .param/l "SCREEN_HEIGHT" 0 3 4, +C4<00000000000000000000000111100000>;
+P_0x8f0c3c040 .param/l "SCREEN_WIDTH" 0 3 3, +C4<00000000000000000000001010000000>;
+S_0x104ca1020 .scope module, "tb_vgatiming" "tb_vgatiming" 4 4;
+ .timescale -9 -9;
+L_0x104c99d70 .functor NOT 1, L_0x8f0c40280, C4<0>, C4<0>, C4<0>;
+L_0x104c99de0 .functor AND 3, L_0x8f0c51040, L_0x8f0c40320, C4<111>, C4<111>;
+L_0x8f0854010 .functor BUFT 1, C4<0>, C4<0>, C4<0>, C4<0>;
+v0x8f0c50780_0 .net/2u *"_ivl_4", 0 0, L_0x8f0854010;  1 drivers
+v0x8f0c50820_0 .net *"_ivl_6", 2 0, L_0x8f0c51040;  1 drivers
+v0x8f0c508c0_0 .net *"_ivl_9", 2 0, L_0x8f0c40320;  1 drivers
+v0x8f0c50960_0 .var "clk", 0 0;
+v0x8f0c50a00_0 .net "end_of_frame", 0 0, L_0x104ca56a0;  1 drivers
+v0x8f0c50aa0_0 .net "g", 0 0, L_0x104c99d70;  1 drivers
+v0x8f0c50b40_0 .net "hsync", 0 0, L_0x104c9ce80;  1 drivers
+v0x8f0c50be0_0 .net "in_active_frame", 0 0, v0x8f0c50000_0;  1 drivers
+v0x8f0c50c80_0 .net "pixel_x", 9 0, v0x8f0c501e0_0;  1 drivers
+v0x8f0c50d20_0 .net "pixel_y", 9 0, L_0x104ca54f0;  1 drivers
+v0x8f0c50dc0_0 .net "r", 0 0, L_0x8f0c40280;  1 drivers
+v0x8f0c50e60_0 .net "rgb", 2 0, L_0x104c99de0;  1 drivers
+v0x8f0c50f00_0 .var "rst_n", 0 0;
+v0x8f0c50fa0_0 .net "vsync", 0 0, L_0x104ca6da0;  1 drivers
+L_0x8f0c40280 .part v0x8f0c501e0_0, 3, 1;
+L_0x8f0c51040 .concat [ 1 1 1 0], L_0x8f0854010, L_0x104c99d70, L_0x8f0c40280;
+L_0x8f0c40320 .repeat 3, 3, v0x8f0c50000_0;
+S_0x104ca1cb0 .scope module, "vgat" "vgatiming" 4 13, 5 57 0, S_0x104ca1020;
+ .timescale -9 -9;
+    .port_info 0 /INPUT 1 "clk_i";
+    .port_info 1 /INPUT 1 "rst_ni";
+    .port_info 2 /OUTPUT 1 "in_active_frame_o";
+    .port_info 3 /OUTPUT 1 "end_of_frame_o";
+    .port_info 4 /OUTPUT 10 "pixel_x_o";
+    .port_info 5 /OUTPUT 10 "pixel_y_o";
+    .port_info 6 /OUTPUT 1 "hsync_o";
+    .port_info 7 /OUTPUT 1 "vsync_o";
+P_0x104ca1e30 .param/l "HBP_COUNT" 1 5 60, +C4<00000000000000000000000000110000>;
+P_0x104ca1e70 .param/l "HFP_COUNT" 1 5 58, +C4<00000000000000000000000000010000>;
+P_0x104ca1eb0 .param/l "HMAX" 1 5 66, +C4<00000000000000000000001100011111>;
+P_0x104ca1ef0 .param/l "HSYNC_COUNT" 1 5 59, +C4<00000000000000000000000001100000>;
+P_0x104ca1f30 .param/l "VBP_COUNT" 1 5 64, +C4<00000000000000000000000000100001>;
+P_0x104ca1f70 .param/l "VFP_COUNT" 1 5 62, +C4<00000000000000000000000000001010>;
+P_0x104ca1fb0 .param/l "VMAX" 1 5 67, +C4<00000000000000000000001000001100>;
+P_0x104ca1ff0 .param/l "VSYNC_COUNT" 1 5 63, +C4<00000000000000000000000000000010>;
+L_0x104ca54f0 .functor BUFZ 10, v0x8f0c50320_0, C4<0000000000>, C4<0000000000>, C4<0000000000>;
+L_0x104ca56a0 .functor BUFZ 1, v0x104ca5600_0, C4<0>, C4<0>, C4<0>;
+L_0x104c9ce80 .functor NOT 1, v0x104c99b30_0, C4<0>, C4<0>, C4<0>;
+L_0x104ca6da0 .functor NOT 1, v0x8f0c50640_0, C4<0>, C4<0>, C4<0>;
+v0x104ca57b0_0 .net "clk_i", 0 0, v0x8f0c50960_0;  1 drivers
+v0x104ca5600_0 .var "end_of_frame", 0 0;
+v0x104ca5450_0 .net "end_of_frame_o", 0 0, L_0x104ca56a0;  alias, 1 drivers
+v0x104ca5ac0_0 .var "horizontal_counter_d", 9 0;
+v0x104ca52a0_0 .var "horizontal_counter_q", 9 0;
+v0x104c99b30_0 .var "hsync", 0 0;
+v0x104c99bd0_0 .net "hsync_o", 0 0, L_0x104c9ce80;  alias, 1 drivers
+v0x8f0c50000_0 .var "in_active_frame", 0 0;
+v0x8f0c500a0_0 .net "in_active_frame_o", 0 0, v0x8f0c50000_0;  alias, 1 drivers
+v0x8f0c50140_0 .var "pix_clk", 0 0;
+v0x8f0c501e0_0 .var "pixel_x", 9 0;
+v0x8f0c50280_0 .net "pixel_x_o", 9 0, v0x8f0c501e0_0;  alias, 1 drivers
+v0x8f0c50320_0 .var "pixel_y", 9 0;
+v0x8f0c503c0_0 .net "pixel_y_o", 9 0, L_0x104ca54f0;  alias, 1 drivers
+v0x8f0c50460_0 .net "rst_ni", 0 0, v0x8f0c50f00_0;  1 drivers
+v0x8f0c50500_0 .var "vertical_counter_d", 9 0;
+v0x8f0c505a0_0 .var "vertical_counter_q", 9 0;
+v0x8f0c50640_0 .var "vsync", 0 0;
+v0x8f0c506e0_0 .net "vsync_o", 0 0, L_0x104ca6da0;  alias, 1 drivers
+E_0x8f10543c0/0 .event negedge, v0x8f0c50460_0;
+E_0x8f10543c0/1 .event posedge, v0x104ca57b0_0;
+E_0x8f10543c0 .event/or E_0x8f10543c0/0, E_0x8f10543c0/1;
+E_0x8f1054400/0 .event negedge, v0x8f0c50460_0;
+E_0x8f1054400/1 .event posedge, v0x8f0c50140_0;
+E_0x8f1054400 .event/or E_0x8f1054400/0, E_0x8f1054400/1;
+E_0x8f1054440 .event anyedge, v0x104ca52a0_0, v0x8f0c505a0_0;
+S_0x104ca11a0 .scope module, "__dumpwave__" "__dumpwave__" 6 2;
+ .timescale -9 -9;
+    .scope S_0x104ca1cb0;
+T_0 ;
+Ewait_0 .event/or E_0x8f1054440, E_0x0;
+    %wait Ewait_0;
+    %load/vec4 v0x104ca52a0_0;
+    %pad/u 32;
+    %cmpi/e 799, 0, 32;
+    %flag_mov 8, 4;
+    %jmp/0 T_0.0, 8;
+    %pushi/vec4 0, 0, 10;
+    %jmp/1 T_0.1, 8;
+T_0.0 ; End of true expr.
+    %load/vec4 v0x104ca52a0_0;
+    %addi 1, 0, 10;
+    %jmp/0 T_0.1, 8;
+ ; End of false expr.
+    %blend;
+T_0.1;
+    %store/vec4 v0x104ca5ac0_0, 0, 10;
+    %load/vec4 v0x104ca52a0_0;
+    %pad/u 32;
+    %cmpi/e 799, 0, 32;
+    %jmp/0xz  T_0.2, 4;
+    %load/vec4 v0x8f0c505a0_0;
+    %pad/u 32;
+    %cmpi/e 524, 0, 32;
+    %flag_mov 8, 4;
+    %jmp/0 T_0.4, 8;
+    %pushi/vec4 0, 0, 10;
+    %jmp/1 T_0.5, 8;
+T_0.4 ; End of true expr.
+    %load/vec4 v0x8f0c505a0_0;
+    %addi 1, 0, 10;
+    %jmp/0 T_0.5, 8;
+ ; End of false expr.
+    %blend;
+T_0.5;
+    %store/vec4 v0x8f0c50500_0, 0, 10;
+    %jmp T_0.3;
+T_0.2 ;
+    %load/vec4 v0x8f0c505a0_0;
+    %store/vec4 v0x8f0c50500_0, 0, 10;
+T_0.3 ;
+    %load/vec4 v0x104ca52a0_0;
+    %pad/u 32;
+    %cmpi/u 640, 0, 32;
+    %flag_get/vec4 5;
+    %jmp/0 T_0.6, 5;
+    %load/vec4 v0x8f0c505a0_0;
+    %pad/u 32;
+    %cmpi/u 480, 0, 32;
+    %flag_get/vec4 5;
+    %and;
+T_0.6;
+    %store/vec4 v0x8f0c50000_0, 0, 1;
+    %load/vec4 v0x8f0c50000_0;
+    %flag_set/vec4 8;
+    %jmp/0 T_0.7, 8;
+    %load/vec4 v0x104ca52a0_0;
+    %jmp/1 T_0.8, 8;
+T_0.7 ; End of true expr.
+    %pushi/vec4 0, 0, 10;
+    %jmp/0 T_0.8, 8;
+ ; End of false expr.
+    %blend;
+T_0.8;
+    %store/vec4 v0x8f0c501e0_0, 0, 10;
+    %load/vec4 v0x8f0c50000_0;
+    %flag_set/vec4 8;
+    %jmp/0 T_0.9, 8;
+    %load/vec4 v0x8f0c505a0_0;
+    %jmp/1 T_0.10, 8;
+T_0.9 ; End of true expr.
+    %pushi/vec4 0, 0, 10;
+    %jmp/0 T_0.10, 8;
+ ; End of false expr.
+    %blend;
+T_0.10;
+    %store/vec4 v0x8f0c50320_0, 0, 10;
+    %load/vec4 v0x104ca52a0_0;
+    %pad/u 32;
+    %cmpi/u 656, 0, 32;
+    %flag_inv 5; GE is !LT
+    %flag_get/vec4 5;
+    %jmp/0 T_0.11, 5;
+    %load/vec4 v0x104ca52a0_0;
+    %pad/u 32;
+    %cmpi/u 752, 0, 32;
+    %flag_get/vec4 5;
+    %and;
+T_0.11;
+    %store/vec4 v0x104c99b30_0, 0, 1;
+    %load/vec4 v0x8f0c505a0_0;
+    %pad/u 32;
+    %cmpi/u 490, 0, 32;
+    %flag_inv 5; GE is !LT
+    %flag_get/vec4 5;
+    %jmp/0 T_0.12, 5;
+    %load/vec4 v0x8f0c505a0_0;
+    %pad/u 32;
+    %cmpi/u 492, 0, 32;
+    %flag_get/vec4 5;
+    %and;
+T_0.12;
+    %store/vec4 v0x8f0c50640_0, 0, 1;
+    %load/vec4 v0x8f0c505a0_0;
+    %pad/u 32;
+    %cmpi/e 480, 0, 32;
+    %flag_get/vec4 4;
+    %jmp/0 T_0.13, 4;
+    %load/vec4 v0x104ca52a0_0;
+    %pad/u 32;
+    %pushi/vec4 641, 0, 32;
+    %cmp/e;
+    %flag_get/vec4 4;
+    %and;
+T_0.13;
+    %store/vec4 v0x104ca5600_0, 0, 1;
+    %jmp T_0;
+    .thread T_0, $push;
+    .scope S_0x104ca1cb0;
+T_1 ;
+    %wait E_0x8f1054400;
+    %load/vec4 v0x8f0c50460_0;
+    %nor/r;
+    %flag_set/vec4 8;
+    %jmp/0xz  T_1.0, 8;
+    %pushi/vec4 0, 0, 10;
+    %assign/vec4 v0x104ca52a0_0, 0;
+    %pushi/vec4 0, 0, 10;
+    %assign/vec4 v0x8f0c505a0_0, 0;
+    %jmp T_1.1;
+T_1.0 ;
+    %load/vec4 v0x104ca5ac0_0;
+    %assign/vec4 v0x104ca52a0_0, 0;
+    %load/vec4 v0x8f0c50500_0;
+    %assign/vec4 v0x8f0c505a0_0, 0;
+T_1.1 ;
+    %jmp T_1;
+    .thread T_1;
+    .scope S_0x104ca1cb0;
+T_2 ;
+    %wait E_0x8f10543c0;
+    %load/vec4 v0x8f0c50460_0;
+    %nor/r;
+    %flag_set/vec4 8;
+    %jmp/0xz  T_2.0, 8;
+    %pushi/vec4 0, 0, 1;
+    %assign/vec4 v0x8f0c50140_0, 0;
+    %jmp T_2.1;
+T_2.0 ;
+    %load/vec4 v0x8f0c50140_0;
+    %inv;
+    %assign/vec4 v0x8f0c50140_0, 0;
+T_2.1 ;
+    %jmp T_2;
+    .thread T_2;
+    .scope S_0x104ca11a0;
+T_3 ;
+    %vpi_call/w 6 7 "$dumpfile", "/Users/marcandre/Desktop/Startup/binaryneuralnet-asic-TTSKY26a/test/waves/test_vgatiming.fst" {0 0 0};
+    %vpi_call/w 6 8 "$dumpvars", 32'sb00000000000000000000000000000000, S_0x104ca1020 {0 0 0};
+    %delay 1, 0;
+    %end;
+    .thread T_3;
+# The file index is used to find the file name in the following table.
+:file_names 7;
+    "N/A";
+    "<interactive>";
+    "-";
+    "/Users/marcandre/Desktop/Startup/binaryneuralnet-asic-TTSKY26a/src/graphicsengine/graphic_consts.sv";
+    "/Users/marcandre/Desktop/Startup/binaryneuralnet-asic-TTSKY26a/test/testbenches/tb_vgatiming.sv";
+    "/Users/marcandre/Desktop/Startup/binaryneuralnet-asic-TTSKY26a/src/graphicsengine/vgatiming.sv";
+    "/private/tmp/__dumpwave__.sv";
